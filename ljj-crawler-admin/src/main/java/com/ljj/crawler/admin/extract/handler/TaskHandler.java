@@ -29,6 +29,7 @@ public class TaskHandler {
 
     /**
      * 一个爬虫任务初始化的处理
+     * 到这里，基本上页面入口的url已经生成了。
      */
     public void initHandler(Integer task_id) {
         //1、解析一个任务

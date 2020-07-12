@@ -1,26 +1,26 @@
 package com.ljj.crawler.admin.extract.handler;
 
+import com.ljj.crawler.admin.extract.po.TaskInfo;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * 功能：
  *
  * @Author:JIUNLIU
- * @data : 2020/7/12 16:24
+ * @data : 2020/7/12 17:40
  */
 @SpringBootTest
-class TaskHandlerTest {
+class ExtractHandlerTest {
 
     @Autowired
-    private TaskHandler taskHandler;
+    private ExtractHandler extractHandler;
 
     @Test
-    void initHandler() {
-        // 到这里基本上
-        taskHandler.initHandler(1);
+    void handler() {
+        extractHandler.handler(new TaskInfo() {{
+            setId(2);
+        }});
     }
 }

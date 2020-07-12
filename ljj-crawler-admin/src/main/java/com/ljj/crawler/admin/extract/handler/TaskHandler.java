@@ -2,6 +2,7 @@ package com.ljj.crawler.admin.extract.handler;
 
 import com.alibaba.fastjson.JSONObject;
 import com.ljj.crawler.admin.extract.dao.TaskInfoMapper;
+import com.ljj.crawler.admin.extract.dao.TaskRuleMapper;
 import com.ljj.crawler.admin.extract.po.TaskInfo;
 import com.ljj.crawler.admin.extract.po.TaskRule;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,8 @@ public class TaskHandler {
 
     @Resource
     private TaskInfoMapper taskInfoMapper;
+    @Resource
+    private TaskRuleMapper taskRuleMapper;
 
     /**
      * 一个爬虫任务初始化的处理
@@ -39,7 +42,7 @@ public class TaskHandler {
              * 获取到规则之后，要生成一批taskInfo信息。
              * 规则链表，后一个规则依赖第一个规则的结果
              */
-            List<TaskRule> taskRules = getTaskRule(taskInfo);
+            List<TaskRule> taskRules = taskRuleMapper.findByTaskId(taskInfo.getId());
 
             List<TaskInfo> taskInfos = new ArrayList<>();
             List<TaskInfo> tmpList = new ArrayList<>();

@@ -15,7 +15,7 @@ import org.apache.ibatis.annotations.Select;
 @Mapper
 public interface TaskInfoMapper {
 
-    @Select("SELECT id,name,start_url,have_rule,status FROM url_config WHERE id = #{id}")
+    @Select("SELECT id,name,start_url,have_rule,status FROM task_info WHERE id = #{id}")
     @Result(column = "start_url", property = "startUrl")
     @Result(column = "have_rule", property = "haveRule")
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")

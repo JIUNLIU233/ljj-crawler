@@ -1,9 +1,11 @@
 package com.ljj.crawler.admin.extract.handler;
 
 import com.ljj.crawler.admin.extract.dao.ExtractInfoMapper;
+import com.ljj.crawler.admin.extract.handler.impl.LocalPipeline;
 import com.ljj.crawler.admin.extract.po.ExtractInfo;
 import com.ljj.crawler.admin.extract.po.TaskInfo;
 import com.ljj.crawler.core.utils.RSUtils;
+import com.ljj.crawler.core.utils.TraceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -12,7 +14,9 @@ import org.jsoup.nodes.Node;
 import org.jsoup.parser.Parser;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -27,15 +31,27 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Component
 public class ExtractHandler {
 
+    private Pipeline pipeline;
+
+
     @Resource
     private ExtractInfoMapper extractInfoMapper;
 
-    public void handler(TaskInfo taskInfo) {
+    public void init(Pipeline pipeline) {
+        if (pipeline == null) this.pipeline = new LocalPipeline();
+        else this.pipeline = pipeline;
+    }
+
+    public void handler() {
+
+        TaskInfo taskInfo = pipeline.pullTask();
+
         //第一步：对taskInfo 进行请求
         //TODO 请求下载
         String content = RSUtils.readFile("test/pages/xbqg.html");
         List<ExtractInfo> extractInfos = extractInfoMapper.findByTaskId(taskInfo.getId());
         for (ExtractInfo extractInfo : extractInfos) {
+            extractInfo.setTraceId(taskInfo.getTraceId());
             handlerExtractInfo(content, extractInfo);
         }
     }
@@ -58,9 +74,10 @@ public class ExtractHandler {
                 Element child = doc.child(0);
                 result = child.attr(extractAttr);
             }
-            //TODO 数据结果处理
-            log.info("extract field success , field_name={},field_value={}", extractInfo.getFieldName(), result);
-        } else {//TODO 需要继续处理
+            extractInfo.setExtractResult(result);
+            log.info("extract field success ,traceId={}, parentTraceId={}, field_name={},field_value={}", extractInfo.getTraceId(), extractInfo.getParentTraceId(), extractInfo.getFieldName(), result);
+            pipeline.pushExtract(extractInfo);
+        } else {
             if (resultType == 1) { // 节点返回信息为Array类型的。比如表格，返回为一行一行的tr
                 Document doc = Jsoup.parse(extract, "", Parser.xmlParser());
                 List<Node> nodesTmp = doc.childNodes();
@@ -83,7 +100,13 @@ public class ExtractHandler {
                     endSub = Integer.valueOf(split[1]);
                 }
                 for (; start < nodes.size() - endSub; start++) {
+                    String traceId = TraceUtil.traceId();
                     for (ExtractInfo info : childExtract) {
+                        if (info.getParentTraceId() == null) info.setParentTraceId(new ArrayList<>());
+                        info.setTraceId(traceId);
+                        int size = info.getParentTraceId().size();
+                        if (!(info.getParentTraceId().size() > 0) || !info.getParentTraceId().get(size - 1).equalsIgnoreCase(extractInfo.getTraceId()))
+                            info.getParentTraceId().add(extractInfo.getTraceId());
                         handlerExtractInfo(nodes.get(start).outerHtml(), info);
                     }
                 }

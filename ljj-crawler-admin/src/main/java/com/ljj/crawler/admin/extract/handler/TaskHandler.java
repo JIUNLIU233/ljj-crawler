@@ -3,6 +3,7 @@ package com.ljj.crawler.admin.extract.handler;
 import com.alibaba.fastjson.JSONObject;
 import com.ljj.crawler.admin.extract.dao.TaskInfoMapper;
 import com.ljj.crawler.admin.extract.dao.TaskRuleMapper;
+import com.ljj.crawler.admin.extract.handler.impl.LocalPipeline;
 import com.ljj.crawler.admin.extract.po.TaskInfo;
 import com.ljj.crawler.admin.extract.po.TaskRule;
 import lombok.extern.slf4j.Slf4j;
@@ -22,10 +23,16 @@ import java.util.List;
 @Component
 public class TaskHandler {
 
+    private Pipeline pipeline;
     @Resource
     private TaskInfoMapper taskInfoMapper;
     @Resource
     private TaskRuleMapper taskRuleMapper;
+
+    public void init(Pipeline pipeline) {
+        if (pipeline == null) this.pipeline = new LocalPipeline();
+        else this.pipeline = pipeline;
+    }
 
     /**
      * 一个爬虫任务初始化的处理
@@ -37,7 +44,7 @@ public class TaskHandler {
         //2、判断url是否有规则
         Integer haveRule = taskInfo.getHaveRule();
         if (haveRule == 0) {//无规则
-            pushTask(taskInfo);
+            pipeline.pushTask(taskInfo);
         } else {// 有规则
             /**
              * 获取到规则之后，要生成一批taskInfo信息。
@@ -92,45 +99,15 @@ public class TaskHandler {
             }
             if (orderFlag) {
                 taskInfos.forEach(t -> {
-                    pushTask(t);
+                    pipeline.pushTask(t);
                 });
             } else {
                 tmpList.forEach(t -> {
-                    pushTask(t);
+                    pipeline.pushTask(t);
                 });
             }
         }
     }
-
-
-    public void pushTask(TaskInfo... taskInfos) {
-        for (TaskInfo taskInfo : taskInfos) {
-            taskInfo.setStatus(2);
-            System.out.println(JSONObject.toJSONString(taskInfo));
-        }
-    }
-
-    public List<TaskRule> getTaskRule(TaskInfo taskInfo) {
-        //TODO 爬虫任务初始化规则的获取
-        return new ArrayList<TaskRule>() {{
-            add(new TaskRule() {{
-                setParamName("yeshu");
-                setRuleType(0);
-                setRuleParam("1-2");
-            }});
-            add(new TaskRule() {{
-                setParamName("yeshu1");
-                setRuleType(0);
-                setRuleParam("1-2");
-            }});
-            add(new TaskRule() {{
-                setParamName("yeshu2");
-                setRuleType(0);
-                setRuleParam("1-2");
-            }});
-        }};
-    }
-
 
     public static void main(String[] args) {
         TaskHandler taskHandler = new TaskHandler();

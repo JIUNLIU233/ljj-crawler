@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * 功能：
  *
@@ -28,5 +30,10 @@ public class ExtractInfo {
     @Builder.Default
     private Integer haveChild = 0;// 是否具有子解析 0:不需要，1需要
     private String arrayRange; // 如果为array的时候，设置其前面舍弃的数据数量和后面舍弃的数量值。
+
+    // 以上信息为通数据库配置信息，以下信息为代码中需要用到的信息
+    private String traceId; // 在执行流程中的id
+    private List<String> parentTraceId;// 在执行流程中的父id
+    private String extractResult;// 执行结果
 
 }

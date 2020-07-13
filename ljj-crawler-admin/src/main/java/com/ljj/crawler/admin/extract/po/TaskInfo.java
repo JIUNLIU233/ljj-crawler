@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * 功能：
  *
@@ -23,6 +25,11 @@ public class TaskInfo {
     private Integer haveRule = 0; // 爬虫起始url是否有规则 0:无规则，1：有规则
     @Builder.Default
     private Integer status = 0; //0:未运行， 1:正在初始化，2：正在运行，3：挂起状态
+
+    // 以上信息为通数据库配置信息，以下信息为代码中需要用到的信息
+
+    private String traceId;
+    private List<String> parentTraceId;
 
 
     public TaskInfo(TaskInfo taskInfo) {

@@ -18,13 +18,15 @@ import lombok.NoArgsConstructor;
 public class ExtractInfo {
     private Integer id; // 主键id
     private Integer taskId; // 解析绑定一个爬虫页面
+    private Integer parentId;//如果为子解析时，其父解析的主键id信息
     private String fieldName;// 要解析的字段，存储时的字段名称
-    private String extractType;// 解析方式
+    private Integer extractType;// 解析方式
+    private String extractAttr;// 要选择的元素属性 名称
     private String extractParam;//用于解析器的参数
-    private String resultType;// 返回类型
+    private Integer resultType;// 解析返回类型 0：string，1：array，2：node
     private String saveType;// 保存方式
     @Builder.Default
-    private Integer extractFlag = 0;// 是否对其进行下一步解析 0:不需要，1需要
-    private String extractUrlRule;// 进行下一步解析时，用于解析连接的规则
+    private Integer haveChild = 0;// 是否具有子解析 0:不需要，1需要
+    private String arrayRange; // 如果为array的时候，设置其前面舍弃的数据数量和后面舍弃的数量值。
 
 }

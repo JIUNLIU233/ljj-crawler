@@ -1,16 +1,20 @@
 package com.ljj.crawler.admin.extract.handler;
 
-import com.ljj.core.utils.RSUtils;
 import com.ljj.crawler.admin.extract.dao.ExtractInfoMapper;
 import com.ljj.crawler.admin.extract.po.ExtractInfo;
 import com.ljj.crawler.admin.extract.po.TaskInfo;
+import com.ljj.crawler.core.utils.RSUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.parser.Parser;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * 功能：
@@ -29,58 +33,87 @@ public class ExtractHandler {
     public void handler(TaskInfo taskInfo) {
         //第一步：对taskInfo 进行请求
         //TODO 请求下载
-
-        String content = RSUtils.readFile("test/pages/table.html");
+        String content = RSUtils.readFile("test/pages/xbqg.html");
         List<ExtractInfo> extractInfos = extractInfoMapper.findByTaskId(taskInfo.getId());
         for (ExtractInfo extractInfo : extractInfos) {
-            //1、获取其解析规则
-            //2、根据解析规则进行解析
-            String extract = extract(content, extractInfo.getExtractParam(), extractInfo.getExtractType());
-            String resultType = extractInfo.getResultType();
-            if (resultType != null && resultType.equalsIgnoreCase("string")) {
-                String fieldsValue = Jsoup.parse(extract).text();
-                log.info("field_name:{}, field_value:{}", extractInfo.getFieldName(), fieldsValue);
+            handlerExtractInfo(content, extractInfo);
+        }
+    }
+
+
+    public void handlerExtractInfo(String content, ExtractInfo extractInfo) {
+        //1、获取其解析规则
+        //2、根据解析规则进行解析
+        String extract = extract(content, extractInfo);
+        Integer resultType = extractInfo.getResultType();
+
+        Integer haveChild = extractInfo.getHaveChild();
+        if (haveChild == 0) { //  不包含子任务信息，直接进行信息封装
+            String extractAttr = extractInfo.getExtractAttr();
+            String result;
+            if (extractAttr == null) {
+                result = Jsoup.parse(extract).text();
+            } else {
+                Document doc = Jsoup.parse(extract, "", Parser.xmlParser());
+                Element child = doc.child(0);
+                result = child.attr(extractAttr);
             }
-            Integer extractFlag = extractInfo.getExtractFlag();// 是否需要进行下一步解析
-            if (extractFlag == 0) continue;
-            //TODO 进行下一步解析的时候，一种是，继续进行解析请求，另一种是：生成子任务，
-            /**
-             * 线性直接解析
-             *      优点：方便代码处理
-             *      缺点：不利于分布式异步请求
-             * 生成子任务方式：
-             *      优点：利于分布式异步请求
-             *
-             * 继续处理又分为：继续解析和继续请求
-             *
-             */
-            String extractUrlRule = extractInfo.getExtractUrlRule();
-            if (extractUrlRule == null) {// 当子任务链接规则为空时，访问子解析规则：比如表格
+            //TODO 数据结果处理
+            log.info("extract field success , field_name={},field_value={}", extractInfo.getFieldName(), result);
+        } else {//TODO 需要继续处理
+            if (resultType == 1) { // 节点返回信息为Array类型的。比如表格，返回为一行一行的tr
+                Document doc = Jsoup.parse(extract, "", Parser.xmlParser());
+                List<Node> nodesTmp = doc.childNodes();
 
+                List<ExtractInfo> childExtract = extractInfoMapper.findByParentId(extractInfo.getId());
+                if (childExtract == null || childExtract.size() < 1) return;
+                CopyOnWriteArrayList<Node> nodes = new CopyOnWriteArrayList<>();
+                nodes.addAll(nodesTmp);
+                nodes.removeIf(s -> {// 删除空节点信息
+                    if (s == null || s.toString().trim().equalsIgnoreCase("")) return true;
+                    else return false;
+                });
 
+                String arrayRange = extractInfo.getArrayRange();
+                int start = 0;
+                int endSub = 0;
+                if (arrayRange != null && arrayRange.contains("-")) {
+                    String[] split = arrayRange.split("-");
+                    start = Integer.valueOf(split[0]);
+                    endSub = Integer.valueOf(split[1]);
+                }
+                for (; start < nodes.size() - endSub; start++) {
+                    for (ExtractInfo info : childExtract) {
+                        handlerExtractInfo(nodes.get(start).outerHtml(), info);
+                    }
+                }
             }
-
-
         }
     }
 
 
     /**
      * 选择器
+     * 0:css
+     * 1:xpath
+     * 2:正则
+     * 3：js
+     * 默认选择css选择器
      *
-     * @param content     源数据
-     * @param selector    抽取规则
-     * @param extractType 抽取方式
+     * @param content 源数据
      * @return
      */
-    static String extract(String content, String selector, String extractType) {
-        if (extractType.equalsIgnoreCase("xpath")) {
-            return xPathExtract(content, selector);
+    static String extract(String content, ExtractInfo extractInfo) {
+        switch (extractInfo.getExtractType()) {
+            case 1:
+                return xPathExtract(content, extractInfo.getExtractParam());
+            case 2:
+                return regexExtract(content, extractInfo.getExtractParam());
+            case 3:
+                return jsExtract(content, extractInfo.getExtractParam());
+            default:
+                return cssExtract(content, extractInfo.getExtractParam());
         }
-
-
-        return cssExtract(content, selector);
-
     }
 
     /**
@@ -91,7 +124,7 @@ public class ExtractHandler {
      * @return
      */
     static String cssExtract(String content, String parseRule) {
-        Document document = Jsoup.parse(content);
+        Document document = Jsoup.parse(content, "", Parser.xmlParser());
         return document.select(parseRule).outerHtml();
     }
 

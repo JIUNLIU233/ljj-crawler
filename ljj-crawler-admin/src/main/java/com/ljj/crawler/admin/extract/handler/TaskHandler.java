@@ -50,8 +50,8 @@ public class TaskHandler {
             boolean firstFlag = true;// 是否是第一个规则的标示
             boolean orderFlag = true;
             for (TaskRule taskRule : taskRules) {
-                if (taskRule.getParamRuleType() == 0) {
-                    String ruleStr = taskRule.getRuleStr();
+                if (taskRule.getRuleType() == 0) {
+                    String ruleStr = taskRule.getRuleParam();
                     String[] split = ruleStr.split("-");
                     int start = Integer.valueOf(split[0]);
                     int max = Integer.valueOf(split[1]);
@@ -115,18 +115,18 @@ public class TaskHandler {
         return new ArrayList<TaskRule>() {{
             add(new TaskRule() {{
                 setParamName("yeshu");
-                setParamRuleType(0);
-                setRuleStr("1-2");
+                setRuleType(0);
+                setRuleParam("1-2");
             }});
             add(new TaskRule() {{
                 setParamName("yeshu1");
-                setParamRuleType(0);
-                setRuleStr("1-2");
+                setRuleType(0);
+                setRuleParam("1-2");
             }});
             add(new TaskRule() {{
                 setParamName("yeshu2");
-                setParamRuleType(0);
-                setRuleStr("1-2");
+                setRuleType(0);
+                setRuleParam("1-2");
             }});
         }};
     }

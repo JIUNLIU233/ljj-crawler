@@ -1,7 +1,7 @@
 package com.ljj.crawler.admin.extract.dao;
 
 import com.ljj.crawler.admin.extract.po.ExtractInfo;
-import com.ljj.crawler.admin.extract.po.TaskRule;
+import com.ljj.crawler.core.constant.TableKey;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Result;
@@ -17,16 +17,35 @@ import java.util.List;
  */
 @Mapper
 public interface ExtractInfoMapper {
-    @Select("SELECT id,task_id,field_name,extract_type,extract_param,result_type" +
-            ",save_type,extract_flag,extract_url_rule FROM extract_info WHERE task_id = #{task_id}")
+
+
+    @Select("SELECT id,task_id,parent_id,field_name,extract_type,extract_param,result_type" +
+            ",save_type,have_child,array_range,extract_attr FROM " + TableKey.EXTRACT + " WHERE task_id = #{task_id}  AND ISNULL(parent_id) ")
     @Result(column = "task_id", property = "taskId")
+    @Result(column = "parent_id", property = "parentId")
     @Result(column = "field_name", property = "fieldName")
     @Result(column = "extract_type", property = "extractType")
     @Result(column = "extract_param", property = "extractParam")
     @Result(column = "result_type", property = "resultType")
     @Result(column = "save_type", property = "saveType")
-    @Result(column = "extract_flag", property = "extractFlag")
-    @Result(column = "extract_url_rule", property = "extractUrlRule")
-    @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "taskId")
+    @Result(column = "have_child", property = "haveChild")
+    @Result(column = "array_range", property = "arrayRange")
+    @Result(column = "extract_attr", property = "extractAttr")
+    @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     List<ExtractInfo> findByTaskId(Integer taskId);
+
+    @Select("SELECT id,task_id,parent_id,field_name,extract_type,extract_param,result_type" +
+            ",save_type,have_child,array_range,extract_attr FROM " + TableKey.EXTRACT + " WHERE parent_id = #{parentId}")
+    @Result(column = "task_id", property = "taskId")
+    @Result(column = "parent_id", property = "parentId")
+    @Result(column = "field_name", property = "fieldName")
+    @Result(column = "extract_type", property = "extractType")
+    @Result(column = "extract_param", property = "extractParam")
+    @Result(column = "result_type", property = "resultType")
+    @Result(column = "save_type", property = "saveType")
+    @Result(column = "have_child", property = "haveChild")
+    @Result(column = "array_range", property = "arrayRange")
+    @Result(column = "extract_attr", property = "extractAttr")
+    @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
+    List<ExtractInfo> findByParentId(Integer parentId);
 }

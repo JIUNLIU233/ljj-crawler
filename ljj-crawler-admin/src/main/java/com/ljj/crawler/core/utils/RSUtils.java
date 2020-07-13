@@ -1,4 +1,4 @@
-package com.ljj.core.utils;
+package com.ljj.crawler.core.utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

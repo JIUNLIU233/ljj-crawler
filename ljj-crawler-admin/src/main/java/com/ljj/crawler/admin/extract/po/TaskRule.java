@@ -19,8 +19,7 @@ public class TaskRule {
     private Integer id; // 主键id
     private Integer taskId; // 对应的爬虫任务的id信息
     private String paramName; // task url规则，url中的参数
-    private Integer paramRuleType; // 参数对应的格则类型，比如：0:递增。
-    private String ruleStr; // 规则str
-    private String reserve; // 关于其他的一些信息。
+    private Integer ruleType; // 参数对应的格则类型，比如：0:递增。
+    private String ruleParam; // 规则str
 
 }

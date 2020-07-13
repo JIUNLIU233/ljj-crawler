@@ -1,4 +1,4 @@
-package com.ljj.core.utils;
+package com.ljj.crawler.core.utils;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;

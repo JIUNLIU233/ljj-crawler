@@ -17,11 +17,11 @@ import java.util.List;
 @Mapper
 public interface TaskRuleMapper {
 
-    @Select("SELECT id,task_id,param_name,param_rule_type,rule_str,reserve FROM task_rule WHERE task_id = #{task_id}")
+    @Select("SELECT id,task_id,param_name,rule_type,rule_str,reserve FROM task_rule WHERE task_id = #{task_id}")
     @Result(column = "task_id", property = "taskId")
     @Result(column = "param_name", property = "paramName")
-    @Result(column = "param_rule_type", property = "paramRuleType")
-    @Result(column = "rule_str", property = "ruleStr")
+    @Result(column = "rule_type", property = "ruleType")
+    @Result(column = "rule_param", property = "ruleParam")
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "taskId")
     List<TaskRule> findByTaskId(Integer taskId);
 }

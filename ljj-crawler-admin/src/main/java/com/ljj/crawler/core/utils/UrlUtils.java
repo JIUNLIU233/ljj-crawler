@@ -1,4 +1,4 @@
-package com.ljj.core.utils;
+package com.ljj.crawler.core.utils;
 
 import java.net.URL;
 

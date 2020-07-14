@@ -1,7 +1,5 @@
 package com.ljj.crawler.admin.extract.handler;
 
-import com.ljj.crawler.admin.extract.po.TaskInfo;
-import com.ljj.crawler.core.utils.TraceUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,9 +18,6 @@ class ExtractHandlerTest {
 
     @Test
     void handler() {
-        extractHandler.handler(new TaskInfo() {{
-            setId(2);
-            setTraceId(TraceUtil.traceId());
-        }});
+        extractHandler.handler();
     }
 }

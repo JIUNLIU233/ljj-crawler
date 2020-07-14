@@ -84,17 +84,17 @@ public class TaskHandler {
                             }
                         }
                     }
-                }
-                if (firstFlag) {
-                    firstFlag = false;
-                    continue;
-                }
-                if (orderFlag) {
-                    taskInfos.clear();
-                    orderFlag = false;
-                } else {
-                    tmpList.clear();
-                    orderFlag = true;
+                    if (firstFlag) {
+                        firstFlag = false;
+                        continue;
+                    }
+                    if (orderFlag) {
+                        taskInfos.clear();
+                        orderFlag = false;
+                    } else {
+                        tmpList.clear();
+                        orderFlag = true;
+                    }
                 }
             }
             if (orderFlag) {

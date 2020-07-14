@@ -48,7 +48,7 @@ public class ExtractHandler {
 
         //第一步：对taskInfo 进行请求
         //TODO 请求下载
-        String content = RSUtils.readFile("test/pages/xbqg.html");
+        String content = RSUtils.readFile("test/pages/yjh.html");
         List<ExtractInfo> extractInfos = extractInfoMapper.findByTaskId(taskInfo.getId());
         for (ExtractInfo extractInfo : extractInfos) {
             extractInfo.setTraceId(taskInfo.getTraceId());

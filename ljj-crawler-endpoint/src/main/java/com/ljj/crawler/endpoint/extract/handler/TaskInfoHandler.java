@@ -1,10 +1,13 @@
 package com.ljj.crawler.endpoint.extract.handler;
 
 import com.ljj.crawler.endpoint.extract.Task;
+import com.ljj.crawler.endpoint.extract.downloader.Request;
 import com.ljj.crawler.endpoint.extract.mapper.TaskInfoMapper;
 import com.ljj.crawler.endpoint.extract.mapper.TaskRuleMapper;
 import com.ljj.crawler.endpoint.extract.model.TaskInfo;
 import com.ljj.crawler.endpoint.extract.model.TaskRule;
+import com.ljj.crawler.endpoint.extract.scheduler.QueueScheduler;
+import com.ljj.crawler.endpoint.extract.scheduler.Scheduler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -21,12 +24,23 @@ import java.util.concurrent.ConcurrentHashMap;
  **/
 @Slf4j
 @Component
-public class TaskInfoHandler<T> implements Handler {
+public class TaskInfoHandler implements Handler {
 
     @Resource
     private TaskInfoMapper taskInfoMapper;
     @Resource
     private TaskRuleMapper taskRuleMapper;
+
+    private Scheduler scheduler = new QueueScheduler();
+
+    /**
+     * 默认调度中心为本地Java对象队列
+     *
+     * @param scheduler
+     */
+    public void init(Scheduler scheduler) {
+        this.scheduler = scheduler;
+    }
 
     @Override
     public void handler(Task task) {
@@ -34,7 +48,8 @@ public class TaskInfoHandler<T> implements Handler {
         Integer haveRule = taskInfo.getHaveRule();
         if (haveRule == 0) {// 无规则情况
             log.info("virtual push, task_id={},url={}", taskInfo.getId(), taskInfo.getStartUrl());
-            //TODO 生成 Request ，并对其进行调度
+            Request request = Request.create(taskInfo);
+            scheduler.pushRequest(request);
         } else {// 有规则情况
             List<TaskRule> taskRules = taskRuleMapper.findByTaskId(taskInfo.getId());
 
@@ -55,12 +70,14 @@ public class TaskInfoHandler<T> implements Handler {
             if (flagTmp.get("orderFlag")) {
                 taskInfos.forEach(t -> {
                     log.info("virtual push, task_id={},url={}", t.getId(), t.getStartUrl());
-                    //TODO 生成 Request ，并对其进行调度
+                    Request request = Request.create(taskInfo);
+                    scheduler.pushRequest(request);
                 });
             } else {
                 tmpList.forEach(t -> {
                     log.info("virtual push, task_id={},url={}", t.getId(), t.getStartUrl());
-                    //TODO 生成 Request ，并对其进行调度
+                    Request request = Request.create(taskInfo);
+                    scheduler.pushRequest(request);
                 });
             }
         }

@@ -4,6 +4,7 @@ import com.ljj.crawler.endpoint.extract.Task;
 import com.ljj.crawler.endpoint.extract.downloader.Response;
 import com.ljj.crawler.endpoint.extract.mapper.ExtractInfoMapper;
 import com.ljj.crawler.endpoint.extract.model.ExtractInfo;
+import com.ljj.crawler.endpoint.extract.scheduler.Scheduler;
 import com.ljj.crawler.endpoint.extract.selector.Selector;
 import com.ljj.crawler.endpoint.utils.TraceUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,11 @@ public class ExtractHandler implements Handler {
 
     @Resource
     private ExtractInfoMapper extractInfoMapper;
+    private Scheduler scheduler;
+
+    public void init(Scheduler scheduler) {
+        this.scheduler = scheduler;
+    }
 
     /**
      * 传递过来的是一个 response，此时 搜索其对应的配置文件对其进行配置
@@ -78,7 +84,7 @@ public class ExtractHandler implements Handler {
             if (extractType == 0) handlerHtmlString(extract, extractInfo);
             log.info("extract field success ,traceId={}, parentTraceId={}, field_name={},field_value={}",
                     extractInfo.getTraceId(), extractInfo.getParentTraceId(), extractInfo.getFieldName(), extractInfo.getExtractResult());
-            //TODO 处理解析到的数据到数据中心
+            scheduler.pushExtract(extractInfo);
         } else {// 有子解析任务
             // 当前解析方式为 html解析，并且当前返回类型为array的时候，比如表格的行，图书的章节列表（即多结果，并且多条结果中又包含一个或多个字段信息）
             extractInfo.setExtractResult(extract);
@@ -134,7 +140,6 @@ public class ExtractHandler implements Handler {
         for (; start < nodes.size() - endSub; start++) {
             String traceId = TraceUtil.traceId();
             for (ExtractInfo info : childExtract) {
-                if (info.getParentTraceId() == null) info.setParentTraceId(new ArrayList<>());
                 info.setTraceId(traceId);
                 int size = info.getParentTraceId().size();
                 if (!(info.getParentTraceId().size() > 0) || !info.getParentTraceId().get(size - 1).equalsIgnoreCase(extractInfo.getTraceId()))

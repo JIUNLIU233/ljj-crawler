@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -42,7 +43,7 @@ public class ExtractInfo implements Task {
 
     // 以上信息为通数据库配置信息，以下信息为代码中需要用到的信息
     private String traceId; // 在执行流程中的id
-    private List<String> parentTraceId;// 在执行流程中的父id
+    private List<String> parentTraceId = new ArrayList<>();// 在执行流程中的父id
     private String extractResult;// 执行结果
 
     @Override
@@ -52,6 +53,6 @@ public class ExtractInfo implements Task {
 
     @Override
     public void addParentTraceId(String traceId) {
-
+        this.parentTraceId.add(traceId);
     }
 }

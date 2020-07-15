@@ -1,8 +1,8 @@
 package com.ljj.crawler.endpoint.extract.scheduler;
 
-import com.ljj.crawler.endpoint.extract.downloader.Request;
-import com.ljj.crawler.endpoint.extract.downloader.Response;
 import com.ljj.crawler.endpoint.extract.model.ExtractInfo;
+import com.ljj.crawler.endpoint.extract.webspider.http.Request;
+import com.ljj.crawler.endpoint.extract.webspider.http.Response;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -47,7 +47,7 @@ public class QueueScheduler implements Scheduler {
     }
 
     @Override
-    public ExtractInfo poll() {
+    public ExtractInfo pollExtract() {
         return extractQueue.poll();
     }
 }

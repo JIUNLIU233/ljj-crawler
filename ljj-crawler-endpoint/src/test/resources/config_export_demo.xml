@@ -1,0 +1,41 @@
+<task name="沧州银行 网点信息抓取" start_url="http://www.czccb.cn/news/2010927/{page}.html" have_rule="1" status="0">
+    <taskRules>
+        <taskRule param_name="page" rule_type="0" rule_param="1-11">0 按照字典顺序，递增</taskRule>
+        <taskRule param_name="page" rule_type="1" rule_param="n7847650">1 的时候，直接赋值</taskRule>
+        <taskRule param_name="page" rule_type="2" rule_param="1,2,3,4,5">给一个list</taskRule>
+    </taskRules>
+    <extracts>
+        <extract field_name="sites" extract_type="0" extract_attr=""
+                 extract_param="body &gt; div.content &gt; div.erjiright &gt; div.ejri_r_content &gt; div.yw-content_zw &gt; table &gt; tbody &gt; tr"
+                 result_type="1" save_type="" have_child="1" array_range="1-0">
+            <extracts>
+                <extract field_name="siteName" extract_type="0" extract_attr="" extract_param="td:nth-child(1)"
+                         result_type="0" save_type="" have_child="0" array_range=""></extract>
+                <extract field_name="siteAddr" extract_type="0" extract_attr="" extract_param="td:nth-child(2)"
+                         result_type="0" save_type="" have_child="0" array_range=""></extract>
+                <extract field_name="sitePhone" extract_type="0" extract_attr="" extract_param="td:nth-child(3)"
+                         result_type="0" save_type="" have_child="0" array_range=""></extract>
+            </extracts>
+        </extract>
+        <extract>
+            id 先获取到
+            <extracts>
+                <extract field_name="readTime" extract_type="4" extract_attr=""
+                         extract_param=""
+                         result_type="1" save_type="" have_child="1" array_range="1-0">
+                    阅读数量是一个异步请求的东西。
+                    js 解析器
+                    <![CDATA["http://www.czccb.cn/click.aspx?no-cache=Math.ram&id=+id+&_="]]>
+                    生成链接
+                    返回类型是link。生成request。
+                    <extracts>
+                        <extract>
+                            这层是解析上层链接返回的内容。
+                        </extract>
+                    </extracts>
+                </extract>
+            </extracts>
+        </extract>
+
+    </extracts>
+</task>

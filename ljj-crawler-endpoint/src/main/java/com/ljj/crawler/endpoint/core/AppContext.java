@@ -3,6 +3,7 @@ package com.ljj.crawler.endpoint.core;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.stereotype.Component;
 
 /**
  * 功能：
@@ -10,6 +11,7 @@ import org.springframework.context.ApplicationContextAware;
  * @Author:JIUNLIU
  * @data : 2020/7/14 21:11
  */
+@Component
 public class AppContext implements ApplicationContextAware {
 
     private static ApplicationContext context;

@@ -1,7 +1,7 @@
 package com.ljj.crawler.endpoint.extract.selector;
 
-import com.ljj.crawler.endpoint.extract.downloader.Response;
 import com.ljj.crawler.endpoint.extract.model.ExtractInfo;
+import com.ljj.crawler.endpoint.extract.webspider.http.Response;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
@@ -55,15 +55,15 @@ public interface Selector {
     static String selector(Response response, ExtractInfo extractInfo) {
         switch (extractInfo.getExtractType()) {
             case 1:
-                return Selector.jsonSelector().select(response.getBody(), extractInfo);
+                return Selector.jsonSelector().select(response.getResponseBytes(), extractInfo);
             case 2:
-                return Selector.regexSelector().select(response.getBody(), extractInfo);
+                return Selector.regexSelector().select(response.getResponseBytes(), extractInfo);
             case 3:
-                return Selector.jsSelector().select(response.getBody(), extractInfo);
+                return Selector.jsSelector().select(response.getResponseBytes(), extractInfo);
             case 4:
-                return Selector.fileSelector().select(response.getBody(), extractInfo);
+                return Selector.fileSelector().select(response.getResponseBytes(), extractInfo);
             default:
-                return Selector.cssSelector().select(response.getBody(), extractInfo);
+                return Selector.cssSelector().select(response.getResponseBytes(), extractInfo);
         }
     }
 }

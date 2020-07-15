@@ -1,11 +1,11 @@
 package com.ljj.crawler.endpoint.extract;
 
 import com.ljj.crawler.endpoint.core.AppContext;
-import com.ljj.crawler.endpoint.extract.downloader.Response;
 import com.ljj.crawler.endpoint.extract.handler.ExtractHandler;
 import com.ljj.crawler.endpoint.extract.handler.TaskInfoHandler;
 import com.ljj.crawler.endpoint.extract.scheduler.QueueScheduler;
 import com.ljj.crawler.endpoint.extract.scheduler.Scheduler;
+import com.ljj.crawler.endpoint.extract.webspider.http.Response;
 
 /**
  * 功能：

@@ -1,13 +1,13 @@
 package com.ljj.crawler.endpoint.extract.handler;
 
 import com.ljj.crawler.endpoint.extract.Task;
-import com.ljj.crawler.endpoint.extract.downloader.Request;
 import com.ljj.crawler.endpoint.extract.mapper.TaskInfoMapper;
 import com.ljj.crawler.endpoint.extract.mapper.TaskRuleMapper;
 import com.ljj.crawler.endpoint.extract.model.TaskInfo;
 import com.ljj.crawler.endpoint.extract.model.TaskRule;
 import com.ljj.crawler.endpoint.extract.scheduler.QueueScheduler;
 import com.ljj.crawler.endpoint.extract.scheduler.Scheduler;
+import com.ljj.crawler.endpoint.extract.webspider.http.Request;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -70,13 +70,13 @@ public class TaskInfoHandler implements Handler {
             if (flagTmp.get("orderFlag")) {
                 taskInfos.forEach(t -> {
                     log.info("virtual push, task_id={},url={}", t.getId(), t.getStartUrl());
-                    Request request = Request.create(taskInfo);
+                    Request request = Request.create(t);
                     scheduler.pushRequest(request);
                 });
             } else {
                 tmpList.forEach(t -> {
                     log.info("virtual push, task_id={},url={}", t.getId(), t.getStartUrl());
-                    Request request = Request.create(taskInfo);
+                    Request request = Request.create(t);
                     scheduler.pushRequest(request);
                 });
             }

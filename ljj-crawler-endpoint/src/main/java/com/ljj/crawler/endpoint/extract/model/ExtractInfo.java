@@ -35,7 +35,7 @@ public class ExtractInfo implements Task {
     private Integer extractType = 0;// 页面类型（html，json，string，file）对应的解析方式分别是：css,json，正则，文件处理
     private String extractAttr;// 要选择的元素属性 名称
     private String extractParam;//用于解析器的参数
-    private Integer resultType;// 解析返回类型 0：string，1：array，2：node
+    private Integer resultType;// 解析返回类型 0：string，1：array，2：node ，3link
     private String saveType;// 保存方式
     @Builder.Default
     private Integer haveChild = 0;// 是否具有子解析 0:不需要，1需要
@@ -47,8 +47,13 @@ public class ExtractInfo implements Task {
     private String extractResult;// 执行结果
 
     @Override
-    public void setTaskId(String tid) {
+    public String getTaskId() {
+        return String.valueOf(this.taskId);
+    }
 
+    @Override
+    public void setTaskId(String tid) {
+        this.taskId = Integer.valueOf(tid);
     }
 
     @Override

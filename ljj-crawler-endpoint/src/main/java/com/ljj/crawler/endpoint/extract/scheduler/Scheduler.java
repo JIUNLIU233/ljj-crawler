@@ -1,8 +1,8 @@
 package com.ljj.crawler.endpoint.extract.scheduler;
 
-import com.ljj.crawler.endpoint.extract.downloader.Request;
-import com.ljj.crawler.endpoint.extract.downloader.Response;
 import com.ljj.crawler.endpoint.extract.model.ExtractInfo;
+import com.ljj.crawler.endpoint.extract.webspider.http.Request;
+import com.ljj.crawler.endpoint.extract.webspider.http.Response;
 
 /**
  * 功能：
@@ -44,5 +44,5 @@ public interface Scheduler {
 
     void pushExtract(ExtractInfo extractInfo);
 
-    ExtractInfo poll();
+    ExtractInfo pollExtract();
 }

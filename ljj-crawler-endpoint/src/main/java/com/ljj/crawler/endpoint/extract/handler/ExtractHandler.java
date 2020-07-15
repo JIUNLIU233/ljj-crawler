@@ -1,11 +1,11 @@
 package com.ljj.crawler.endpoint.extract.handler;
 
 import com.ljj.crawler.endpoint.extract.Task;
-import com.ljj.crawler.endpoint.extract.downloader.Response;
 import com.ljj.crawler.endpoint.extract.mapper.ExtractInfoMapper;
 import com.ljj.crawler.endpoint.extract.model.ExtractInfo;
 import com.ljj.crawler.endpoint.extract.scheduler.Scheduler;
 import com.ljj.crawler.endpoint.extract.selector.Selector;
+import com.ljj.crawler.endpoint.extract.webspider.http.Response;
 import com.ljj.crawler.endpoint.utils.TraceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -16,7 +16,6 @@ import org.jsoup.parser.Parser;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -145,7 +144,7 @@ public class ExtractHandler implements Handler {
                 if (!(info.getParentTraceId().size() > 0) || !info.getParentTraceId().get(size - 1).equalsIgnoreCase(extractInfo.getTraceId()))
                     info.getParentTraceId().add(extractInfo.getTraceId());
                 Response res = new Response(response);
-                res.setBody(nodes.get(start).outerHtml().getBytes());
+                res.setResponseBytes(nodes.get(start).outerHtml().getBytes());
                 handlerExtractInfo(res, info);
             }
         }

@@ -2,6 +2,7 @@ package com.ljj.crawler.endpoint.extract.webspider.http;
 
 
 import com.ljj.crawler.endpoint.extract.Task;
+import com.ljj.crawler.endpoint.utils.TraceUtil;
 import org.apache.http.client.CookieStore;
 
 import java.io.OutputStream;
@@ -54,10 +55,17 @@ public class Response implements Task {
     public Response() {
     }
 
-    public Response(Request request) {
-        this.taskId = request.getTaskId();
-        this.traceId = request.getTraceId();
-        this.parentTraceId = request.getParentTraceId();
+    public Response(Task task) {
+        this.taskId = task.getTaskId();
+        this.traceId = task.getTraceId();
+        this.parentTraceId = task.getParentTraceId();
+    }
+
+    public static Response create(Task task){
+        Response response = new Response();
+        response.setTaskId(task.getTaskId());
+        response.setTraceId(TraceUtil.traceId());
+        return response;
     }
 
     public Response(Response response) {

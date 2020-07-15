@@ -1,6 +1,5 @@
 package com.ljj.crawler.endpoint;
 
-import com.ljj.crawler.endpoint.core.AppContext;
 import com.ljj.crawler.endpoint.extract.Task;
 import com.ljj.crawler.endpoint.extract.handler.ExtractHandler;
 import com.ljj.crawler.endpoint.extract.handler.TaskInfoHandler;
@@ -9,7 +8,6 @@ import com.ljj.crawler.endpoint.extract.scheduler.Scheduler;
 import com.ljj.crawler.endpoint.extract.webspider.WRequest;
 import com.ljj.crawler.endpoint.extract.webspider.http.Request;
 import com.ljj.crawler.endpoint.extract.webspider.http.Response;
-import com.ljj.crawler.endpoint.extract.webspider.utils.FetchUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -40,7 +38,7 @@ class EndpointApplicationTests {
         taskInfoHandler.handler(new Task() {
             @Override
             public String getTaskId() {
-                return "2";
+                return "3";
             }
 
             @Override

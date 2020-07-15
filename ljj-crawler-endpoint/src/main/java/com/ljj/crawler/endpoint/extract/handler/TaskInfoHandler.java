@@ -8,7 +8,9 @@ import com.ljj.crawler.endpoint.extract.model.TaskRule;
 import com.ljj.crawler.endpoint.extract.scheduler.QueueScheduler;
 import com.ljj.crawler.endpoint.extract.scheduler.Scheduler;
 import com.ljj.crawler.endpoint.extract.webspider.http.Request;
+import com.ljj.crawler.endpoint.extract.webspider.http.Response;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -48,8 +50,19 @@ public class TaskInfoHandler implements Handler {
         Integer haveRule = taskInfo.getHaveRule();
         if (haveRule == 0) {// 无规则情况
             log.info("virtual push, task_id={},url={}", taskInfo.getId(), taskInfo.getStartUrl());
-            Request request = Request.create(taskInfo);
-            scheduler.pushRequest(request);
+
+            /**
+             * 没有规则的情况下，可能存在无链接信息的情况出现
+             */
+
+            if (StringUtils.isNoneEmpty(taskInfo.getStartUrl())) {
+                Request request = Request.create(taskInfo);
+                scheduler.pushRequest(request);
+            } else {
+                Response response = Response.create(taskInfo);
+                scheduler.pushResponse(response);
+            }
+
         } else {// 有规则情况
             List<TaskRule> taskRules = taskRuleMapper.findByTaskId(taskInfo.getId());
 

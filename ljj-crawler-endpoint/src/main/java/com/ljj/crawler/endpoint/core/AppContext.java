@@ -23,6 +23,7 @@ public class AppContext implements ApplicationContextAware {
 
 
     public static <T> T getBean(Class<T> tClass) {
+        if (context == null) return null;
         return context.getBean(tClass);
     }
 }

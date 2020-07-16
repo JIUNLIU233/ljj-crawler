@@ -203,18 +203,22 @@ public class WRequest {
 
 
     private Response exe() {
-        CookieStore cookieStore = fetchUtil.getCookies(taskId);
-        if (cookieStore == null) cookieStore = new BasicCookieStore();
-        this.request.setCookieStore(cookieStore);
-        Response response = downloader.download(this.request);
-
-
-        // 由于jsoup请求后，cookie为单独本次请求返回的cookie信息，HTTP client是所有cookie的融合体，所以，需要进行分开处理
-        if (this.downloader instanceof JsoupDownloader) {
-            // TODO JSOUP 的cookie信息处理
-        } else if (this.downloader instanceof HttpClientDownloader) {
-            fetchUtil.updateCookies(taskId, cookieStore);
+        CookieStore cookieStore = null;
+        if (fetchUtil != null) {
+            cookieStore = fetchUtil.getCookies(taskId);
+            if (cookieStore == null) cookieStore = new BasicCookieStore();
+            this.request.setCookieStore(cookieStore);
         }
+        Response response = downloader.download(this.request);
+        if (fetchUtil != null) {
+            // 由于jsoup请求后，cookie为单独本次请求返回的cookie信息，HTTP client是所有cookie的融合体，所以，需要进行分开处理
+            if (this.downloader instanceof JsoupDownloader) {
+                // TODO JSOUP 的cookie信息处理
+            } else if (this.downloader instanceof HttpClientDownloader) {
+                fetchUtil.updateCookies(taskId, cookieStore);
+            }
+        }
+
         if (response != null)
             logger.debug("task_id={},res={}", taskId, response.getResponseBody());
         else

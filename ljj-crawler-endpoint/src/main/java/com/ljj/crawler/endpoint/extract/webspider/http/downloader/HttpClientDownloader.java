@@ -16,6 +16,10 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +29,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author JIUN·LIU
@@ -76,8 +82,6 @@ public class HttpClientDownloader implements Downloader {
         CloseableHttpClient client = builder.build();
 
 
-
-
         // 5
         CloseableHttpResponse execute = null;
         Integer retryTime = request.getRetryTime();
@@ -111,7 +115,13 @@ public class HttpClientDownloader implements Downloader {
             result.setCurrentURL(new URL(request.getUrl()));
             result.setResponseBytes(EntityUtils.toByteArray(entity));
             if (result.getResponseBytes() != null) {
-                result.setResponseBody(new String(result.getResponseBytes()));
+                String responseBody = new String(result.getResponseBytes());
+                String charSet = getCharSet(responseBody);
+                if (charSet == null) {
+                    result.setResponseBody(responseBody);
+                } else {
+                    result.setResponseBody(new String(result.getResponseBytes(), charSet));
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -122,7 +132,7 @@ public class HttpClientDownloader implements Downloader {
         result.setStatusCode(statusCode);
         Map<String, String> header2Map = header2Map(response.getAllHeaders());
         if (header2Map != null) result.setHeaders(header2Map);
-        if (statusCode>299 && statusCode<400){
+        if (statusCode > 299 && statusCode < 400) {
             String location = header2Map.get("Location");
             result.setLocation(location);
         }
@@ -211,5 +221,32 @@ public class HttpClientDownloader implements Downloader {
             else nameValuePairs.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
         }
         return nameValuePairs;
+    }
+
+
+    private static String getCharSet(String content) {
+
+        Document parse = Jsoup.parse(content);
+        Elements select = parse.select("meta");
+        for (Element element : select) {
+            if (element.outerHtml().contains("charset=")) {
+                String regex = ".*charset=([^;]*)\".*";
+                Pattern pattern = Pattern.compile(regex);
+                Matcher matcher = pattern.matcher(element.outerHtml());
+                if (matcher.find())
+                    return matcher.group(1);
+                else
+                    return null;
+            }
+        }
+
+        return null;
+
+    }
+
+
+    public static void main(String[] args) {
+        String charSet = getCharSet("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=GBK\" />");
+        System.out.println(charSet);
     }
 }

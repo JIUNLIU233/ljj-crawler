@@ -50,6 +50,7 @@ public class Response implements Task {
      */
 
     private String traceId;
+    private String parentId;
     private List<String> parentTraceId = new ArrayList<>();
 
     public Response() {
@@ -192,6 +193,18 @@ public class Response implements Task {
 
     public void setHistoryUrls(List<String> historyUrls) {
         this.historyUrls = historyUrls;
+    }
+
+    public String getParentId() {
+        return parentId;
+    }
+
+    public void setParentId(String parentId) {
+        this.parentId = parentId;
+    }
+
+    public void setParentTraceId(List<String> parentTraceId) {
+        this.parentTraceId = parentTraceId;
     }
 }
 

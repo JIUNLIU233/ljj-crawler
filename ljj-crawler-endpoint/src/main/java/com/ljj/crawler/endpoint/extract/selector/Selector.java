@@ -6,6 +6,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 
+import java.util.Base64;
+
 /**
  * Create by JIUN·LIU
  * Create time 2020/7/14
@@ -17,7 +19,7 @@ public interface Selector {
 
     static Selector cssSelector() {
         return (content, extractInfo) -> {
-            Document document = Jsoup.parse(new String(content), "", Parser.xmlParser());
+            Document document = Jsoup.parse(new String(content));
             return document.select(extractInfo.getExtractParam()).outerHtml();
         };
     }
@@ -47,23 +49,39 @@ public interface Selector {
     static Selector fileSelector() {
         return (content, extractInfo) -> {
             // 文件 的选择
+            Integer resultType = extractInfo.getResultType();
+            if (resultType == 4) {
+                return Base64.getEncoder().encodeToString(content);
+            }
+
             return null;
         };
+    }
+
+    /**
+     * 静态数据梳理，
+     *
+     * @return
+     */
+    static Selector staticSelector() {
+        return (content, extractInfo) -> extractInfo.getExtractParam();
     }
 
 
     static String selector(Response response, ExtractInfo extractInfo) {
         switch (extractInfo.getExtractType()) {
-            case 1:
-                return Selector.jsonSelector().select(response.getResponseBytes(), extractInfo);
             case 2:
                 return Selector.regexSelector().select(response.getResponseBytes(), extractInfo);
             case 3:
-                return Selector.jsSelector().select(response.getResponseBytes(), extractInfo);
+                return Selector.jsonSelector().select(response.getResponseBytes(), extractInfo);
             case 4:
                 return Selector.fileSelector().select(response.getResponseBytes(), extractInfo);
+            case 5:
+                return Selector.staticSelector().select(response.getResponseBytes(), extractInfo);
+            case 7:
+                return Selector.jsSelector().select(response.getResponseBytes(), extractInfo);
             default:
-                return Selector.cssSelector().select(response.getResponseBytes(), extractInfo);
+                return Selector.cssSelector().select(response.getResponseBody().getBytes(), extractInfo);
         }
     }
 }

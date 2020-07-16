@@ -5,9 +5,11 @@ import com.ljj.crawler.endpoint.extract.mapper.ExtractInfoMapper;
 import com.ljj.crawler.endpoint.extract.model.ExtractInfo;
 import com.ljj.crawler.endpoint.extract.scheduler.Scheduler;
 import com.ljj.crawler.endpoint.extract.selector.Selector;
+import com.ljj.crawler.endpoint.extract.webspider.http.Request;
 import com.ljj.crawler.endpoint.extract.webspider.http.Response;
 import com.ljj.crawler.endpoint.utils.TraceUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -51,9 +53,20 @@ public class ExtractHandler implements Handler {
         }
         if (task instanceof Response) {
             Response response = (Response) task;
-            for (ExtractInfo extractInfo : extractInfos) {
-                extractInfo.setTraceId(response.getTraceId());
-                handlerExtractInfo(response, extractInfo);
+            String parentId = response.getParentId();
+            if (StringUtils.isEmpty(parentId)) {
+                for (ExtractInfo extractInfo : extractInfos) {
+                    extractInfo.setTraceId(response.getTraceId());
+                    handlerExtractInfo(response, extractInfo);
+                }
+            } else {
+                List<ExtractInfo> byParentId = extractInfoMapper.findByParentId(Integer.valueOf(parentId));
+                for (ExtractInfo extractInfo : byParentId) {
+                    extractInfo.setTraceId(response.getTraceId());
+                    extractInfo.setParentTraceId(response.getParentTraceId());
+                    extractInfo.addParentTraceId(response.getTraceId());
+                    handlerExtractInfo(response, extractInfo);
+                }
             }
 
         } else {
@@ -69,25 +82,48 @@ public class ExtractHandler implements Handler {
      */
     private void handlerExtractInfo(Response response, ExtractInfo extractInfo) {
         // extractInfo中应该包含页面类型（html，json，string，file），然后通过页面类型对其进行处理
-        String extract = Selector.selector(response, extractInfo);
         Integer resultType = extractInfo.getResultType();
-        Integer haveChild = extractInfo.getHaveChild();
         Integer extractType = extractInfo.getExtractType();
-
-        if (haveChild == 0) { //  不包含子任务信息，直接进行信息封装,
+        if (extractType == 6) { // 此时，为传入的解析为一个 需要进行请求的url
             /**
-             * 叶子节点肯定是单条数据
-             * 可能为字符串数据类型
-             * 也可能为文件数据类型，若是文件数据类型，则这里的result保存的是 文件存储地址
+             * 对于传入的url，目前的想法就是将其封装成一个request，解析其response即可。
+             * 如果其没有对应的子解析器，那么当前request就不进行封装了。
              */
-            if (extractType == 0) handlerHtmlString(extract, extractInfo);
+            List<ExtractInfo> byParentId = extractInfoMapper.findByParentId(extractInfo.getId());
+            if (byParentId == null || byParentId.size() < 1) return;
+            else {// 封装对应的request。
+                Request request = Request.create(extractInfo);
+                request.setUrl(extractInfo.getExtractParam());
+                scheduler.pushRequest(request);
+            }
+
+        } else if (extractType == 5) { // 直接从配置中传递的值
+            extractInfo.setExtractResult(extractInfo.getExtractParam());
             log.info("extract field success ,traceId={}, parentTraceId={}, field_name={},field_value={}",
                     extractInfo.getTraceId(), extractInfo.getParentTraceId(), extractInfo.getFieldName(), extractInfo.getExtractResult());
             scheduler.pushExtract(extractInfo);
-        } else {// 有子解析任务
-            // 当前解析方式为 html解析，并且当前返回类型为array的时候，比如表格的行，图书的章节列表（即多结果，并且多条结果中又包含一个或多个字段信息）
-            extractInfo.setExtractResult(extract);
-            if (extractType == 0 && resultType == 1) handlerHtmlArray(response, extractInfo);
+        } else {
+            String extract = Selector.selector(response, extractInfo);
+            Integer haveChild = extractInfo.getHaveChild();
+
+            if (haveChild == 0) { //  不包含子任务信息，直接进行信息封装,
+                /**
+                 * 叶子节点肯定是单条数据
+                 * 可能为字符串数据类型
+                 * 也可能为文件数据类型，若是文件数据类型，则这里的result保存的是 文件存储地址
+                 */
+                if (extractType == 1) handlerHtmlString(extract, extractInfo);
+                else {
+                    extractInfo.setExtractResult(extract);
+                }
+                log.info("extract field success ,traceId={}, parentTraceId={}, field_name={},field_value={}",
+                        extractInfo.getTraceId(), extractInfo.getParentTraceId(), extractInfo.getFieldName(), extractInfo.getExtractResult());
+                scheduler.pushExtract(extractInfo);
+            } else {// 有子解析任务
+                // 当前解析方式为 html解析，并且当前返回类型为array的时候，比如表格的行，图书的章节列表（即多结果，并且多条结果中又包含一个或多个字段信息）
+                extractInfo.setExtractResult(extract);
+                if (extractType == 0 && resultType == 1) handlerHtmlArray(response, extractInfo);
+            }
         }
     }
 

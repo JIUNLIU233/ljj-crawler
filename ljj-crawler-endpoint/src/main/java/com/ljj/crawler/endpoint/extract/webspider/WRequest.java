@@ -47,7 +47,7 @@ public class WRequest {
     // http 下载器
     private Downloader downloader;
 
-    private FetchUtil fetchUtil = AppContext.getBean(FetchUtil.class);
+    private FetchUtil fetchUtil;
 
     private List<String> historyUrls;
 
@@ -67,6 +67,19 @@ public class WRequest {
 
     private WRequest(String taskId) {
         this.taskId = taskId;
+    }
+
+
+    /**
+     * 是否开启 状态保存功能。
+     *
+     * @param state
+     * @return
+     */
+    public WRequest state(boolean state) {
+        if (state) this.fetchUtil = AppContext.getBean(FetchUtil.class);
+        else fetchUtil = null;
+        return this;
     }
 
     public WRequest connect(String httpUrl) {
@@ -179,6 +192,7 @@ public class WRequest {
     public Response execute() {
         if (this.downloader == null) this.downloader = new HttpClientDownloader();
         Response response = exe();
+        response.setParentId(this.request.getParentId());
         if (response != null) {
             if (response.getStatusCode() > 299 && response.getStatusCode() < 400) {
                 if (this.maxRedirectTime > 0) { // 有剩余redirect 次数

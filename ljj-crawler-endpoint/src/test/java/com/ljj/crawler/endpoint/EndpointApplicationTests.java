@@ -33,12 +33,25 @@ class EndpointApplicationTests {
     void contextLoads() {
 
 
-
         init();
+
+        start(3);
+
+
+        try {
+            Thread.sleep(20000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void start(int taskId) {
+        // 启动任务
         taskInfoHandler.handler(new Task() {
             @Override
             public String getTaskId() {
-                return "3";
+                return String.valueOf(taskId);
             }
 
             @Override
@@ -66,12 +79,50 @@ class EndpointApplicationTests {
 
             }
         });
-        Request request = scheduler.pollRequest();
-        Response response = WRequest.create(request).execute();
-        extractHandler.handler(response);
+        // 启动下载器
 
+        new Thread(() -> {
+            while (true) {
+                Request request = scheduler.pollRequest();
+                if (request == null) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    continue;
+                }
+                Response execute = WRequest.create(request).state(false).execute();
+                scheduler.pushResponse(execute);
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
 
-        System.out.println("");
+        // 启动解析器
+
+        new Thread(() -> {
+            while (true) {
+                Response response = scheduler.pollResponse();
+                if (response == null){
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    continue;
+                }
+                extractHandler.handler(response);
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 
 }

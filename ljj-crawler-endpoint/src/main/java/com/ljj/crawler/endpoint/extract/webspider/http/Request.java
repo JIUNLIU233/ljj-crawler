@@ -2,6 +2,7 @@ package com.ljj.crawler.endpoint.extract.webspider.http;
 
 
 import com.ljj.crawler.endpoint.extract.Task;
+import com.ljj.crawler.endpoint.extract.model.ExtractInfo;
 import com.ljj.crawler.endpoint.extract.model.TaskInfo;
 import com.ljj.crawler.endpoint.utils.TraceUtil;
 import org.apache.http.client.CookieStore;
@@ -58,15 +59,38 @@ public class Request implements Task {
      */
 
     private String traceId;
+    private String parentId;
     private List<String> parentTraceId = new ArrayList<>();
 
     public static Request create(TaskInfo taskInfo) {
-        //TODO 将taskInfo 转换为一个request
         Request request = new Request();
         request.setTaskId(taskInfo.getTaskId());
         request.setTraceId(TraceUtil.traceId());
         request.setUrl(taskInfo.getStartUrl());
         return request;
+    }
+
+    public static Request create(ExtractInfo extractInfo) {
+        Request request = new Request();
+        request.setTaskId(extractInfo.getTaskId());
+        request.setTraceId(extractInfo.getTraceId());
+        request.setParentTraceId(extractInfo.getParentTraceId());
+        request.setParentId(String.valueOf(extractInfo.getId()));
+
+        return request;
+    }
+
+
+    public String getParentId() {
+        return parentId;
+    }
+
+    public void setParentId(String parentId) {
+        this.parentId = parentId;
+    }
+
+    public void setParentTraceId(List<String> parentTraceId) {
+        this.parentTraceId = parentTraceId;
     }
 
     public String getRequestCharset() {

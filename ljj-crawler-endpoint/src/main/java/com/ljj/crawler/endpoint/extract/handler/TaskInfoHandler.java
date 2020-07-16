@@ -57,9 +57,11 @@ public class TaskInfoHandler implements Handler {
 
             if (StringUtils.isNoneEmpty(taskInfo.getStartUrl())) {
                 Request request = Request.create(taskInfo);
+                log.info("task_id={}, push to request");
                 scheduler.pushRequest(request);
             } else {
                 Response response = Response.create(taskInfo);
+                log.info("task_id={}, push to response");
                 scheduler.pushResponse(response);
             }
 

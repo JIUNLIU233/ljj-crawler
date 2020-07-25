@@ -42,6 +42,9 @@ public class FileUtils {
         saveFile(inputStream, subFix, UUID.randomUUID().toString(), savePath);
     }
 
+    public static void saveFile(byte[] bytes, String savePath) {
+        saveFile(bytes, "jpg", UUID.randomUUID().toString(), savePath);
+    }
     public static void saveFile(byte[] bytes, String subFix, String savePath) {
         saveFile(bytes, subFix, UUID.randomUUID().toString(), savePath);
     }

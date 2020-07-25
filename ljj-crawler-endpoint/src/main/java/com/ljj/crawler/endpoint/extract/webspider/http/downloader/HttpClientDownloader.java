@@ -120,6 +120,8 @@ public class HttpClientDownloader implements Downloader {
                 if (charSet == null) {
                     result.setResponseBody(responseBody);
                 } else {
+                    if (charSet.contains("UTF") || charSet.contains("utf")) charSet = "UTF-8";
+                    else charSet = "GBK";
                     result.setResponseBody(new String(result.getResponseBytes(), charSet));
                 }
             }

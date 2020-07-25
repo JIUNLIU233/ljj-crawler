@@ -13,9 +13,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @SpringBootTest
 class EndpointApplicationTests {
+
+
+    ExecutorService executorService = Executors.newFixedThreadPool(300);
 
     @Autowired
     private TaskInfoHandler taskInfoHandler;
@@ -35,11 +40,11 @@ class EndpointApplicationTests {
 
         init();
 
-        start(3);
-
+        start(4);
+//        startOne(4);
 
         try {
-            Thread.sleep(20000);
+            Thread.sleep(1000 * 60 * 60 * 3);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -92,8 +97,10 @@ class EndpointApplicationTests {
                     }
                     continue;
                 }
-                Response execute = WRequest.create(request).state(false).execute();
-                scheduler.pushResponse(execute);
+                executorService.execute(() -> {
+                    Response execute = WRequest.create(request).state(false).execute();
+                    scheduler.pushResponse(execute);
+                });
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
@@ -107,7 +114,7 @@ class EndpointApplicationTests {
         new Thread(() -> {
             while (true) {
                 Response response = scheduler.pollResponse();
-                if (response == null){
+                if (response == null) {
                     try {
                         Thread.sleep(100);
                     } catch (InterruptedException e) {
@@ -123,6 +130,46 @@ class EndpointApplicationTests {
                 }
             }
         }).start();
+    }
+
+    public void startOne(int taskId) {
+        taskInfoHandler.handler(new Task() {
+            @Override
+            public String getTaskId() {
+                return String.valueOf(taskId);
+            }
+
+            @Override
+            public void setTaskId(String tid) {
+
+            }
+
+            @Override
+            public String getTraceId() {
+                return null;
+            }
+
+            @Override
+            public void setTraceId(String traceId) {
+
+            }
+
+            @Override
+            public List<String> getParentTraceId() {
+                return null;
+            }
+
+            @Override
+            public void addParentTraceId(String traceId) {
+
+            }
+        });
+        Request request = scheduler.pollRequest();
+        Response response = WRequest.create(request).state(false).execute();
+        extractHandler.handler(response);
+        Request request1 = scheduler.pollRequest();
+        response = WRequest.create(request1).state(false).execute();
+        extractHandler.handler(response);
     }
 
 }

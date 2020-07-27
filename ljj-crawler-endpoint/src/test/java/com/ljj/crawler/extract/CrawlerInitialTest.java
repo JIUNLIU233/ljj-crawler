@@ -28,7 +28,7 @@ class CrawlerInitialTest {
         taskHandler.handler(new Task() {
             @Override
             public String getTid() {
-                return "1";
+                return "3";
             }
 
             @Override

@@ -10,6 +10,7 @@ import com.ljj.crawler.core.scheduler.Scheduler;
 import com.ljj.crawler.extract.selector.Selector;
 import com.ljj.crawler.webspider.http.Request;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Node;
@@ -60,7 +61,7 @@ public class ExtractHandler implements AbstractHandler {
         if (task instanceof TaskInfo) { // 任务中没有起始url ，则直接将task_info 推过来，通过taskId查询相关解析
             extractInfos = extractMapper.findByTid(Integer.valueOf(task.getTid()));
         } else if (task instanceof ExtractInfo) {
-            if (pid == null)
+            if (pid == null || "null".equalsIgnoreCase(pid))
                 extractInfos = extractMapper.findByTid(Integer.valueOf(task.getTid()));
             else extractInfos = extractMapper.findByPid(Integer.valueOf(pid));
         }
@@ -77,13 +78,16 @@ public class ExtractHandler implements AbstractHandler {
                 String content = extractInfo.getContent();
                 Integer contentType = extractInfo.getContentType();
                 if (contentType == null || contentType == 0 || contentType == 1) {
-                    log.info("extract handler >>> contentType=html, selector={}, content={}", extractInfo.getSelector(), content);
+                    String selector = extractInfo.getSelector();
+                    log.info("extract handler >>> contentType=html, selector={}, content={}", selector, content);
                     // 默认html
                     // 如果传入的解析（即父解析）的contentType为一个link，则可以直接进行解析。
                     String selectResult = null;
                     if (task instanceof ExtractInfo) {
                         Integer ct = ((ExtractInfo) task).getContentType();
-                        if (ct == null || ct != 1) {
+                        if (selector == null || StringUtils.isEmpty(selector)) {
+                            selectResult = extractInfo.getContent();
+                        } else if (ct == null || ct != 1) {
                             selectResult = Selector.cssSelector().select(extractInfo.getContent().getBytes(), extractInfo);
                         } else {
                             selectResult = Selector.cssXmlSelector().select(extractInfo.getContent().getBytes(), extractInfo);
@@ -96,7 +100,13 @@ public class ExtractHandler implements AbstractHandler {
                         log.info("extract handler end >>> select result == null");
                     } else if ((resultType == null || resultType == 1) && selectResult != null) {
                         Document document = Jsoup.parse(selectResult, "", Parser.xmlParser());
-                        String result = document.text();
+                        String result;
+                        String selectorAttr = extractInfo.getSelectorAttr();
+                        if (selectorAttr == null || StringUtils.isEmpty(selectorAttr)) {
+                            result = document.text();
+                        } else {
+                            result = document.children().attr(selectorAttr);
+                        }
                         extractInfo.setResult(result);
                         log.info("extract handler end >>> push to data result={}", JSON.toJSONString(extractInfo));
                         scheduler.pushData(extractInfo);
@@ -165,8 +175,9 @@ public class ExtractHandler implements AbstractHandler {
             } catch (CloneNotSupportedException e) {
                 log.info("extract handler error >>> clone error, e:", e);
             }
-            temp.setContent(content);
-            temp.setResult(null);
+            temp.setResult(content);
+            temp.setResultBytes(content.getBytes());
+            temp.setPid(extractInfo.getId());
             scheduler.pushExtract(temp);
         }
     }

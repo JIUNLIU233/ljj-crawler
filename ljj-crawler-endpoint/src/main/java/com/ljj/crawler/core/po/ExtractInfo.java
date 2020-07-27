@@ -32,6 +32,7 @@ public class ExtractInfo implements Task, Cloneable {
     // 本次解析内容的类型 1：html，2：json,3:link,4:static,5:base64图片信息
     private Integer contentType;
     private String selector;    // 本次解析的参数信息
+    private String selectorAttr;// 解析html中的属性参数
     private Integer resultType;  // 本次解析结果的类型 1：string，2：array
     private String result;      // 本次解析的结果
     private byte[] resultBytes; // 本次解析内容的字节数组

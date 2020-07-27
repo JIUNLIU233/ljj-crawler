@@ -24,6 +24,7 @@ public class ExtractInfo implements Task {
     private Integer taskId; // 解析绑定一个爬虫页面
     private Integer parentId;//如果为子解析时，其父解析的主键id信息
     private String fieldName;// 要解析的字段，存储时的字段名称
+    private String content;
     /**
      * 0:html
      * 1:json

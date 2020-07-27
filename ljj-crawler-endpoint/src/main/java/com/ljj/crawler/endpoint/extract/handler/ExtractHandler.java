@@ -7,7 +7,9 @@ import com.ljj.crawler.endpoint.extract.scheduler.Scheduler;
 import com.ljj.crawler.endpoint.extract.selector.Selector;
 import com.ljj.crawler.endpoint.extract.webspider.http.Request;
 import com.ljj.crawler.endpoint.extract.webspider.http.Response;
+import com.ljj.crawler.endpoint.utils.FileUtils;
 import com.ljj.crawler.endpoint.utils.TraceUtil;
+import com.ljj.crawler.endpoint.utils.UrlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
@@ -15,9 +17,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.parser.Parser;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.net.URL;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -44,6 +48,7 @@ public class ExtractHandler implements Handler {
      *
      * @param task
      */
+    @Async
     @Override
     public void handler(Task task) {
         List<ExtractInfo> extractInfos = extractInfoMapper.findByTaskId(Integer.valueOf(task.getTaskId()));
@@ -60,10 +65,12 @@ public class ExtractHandler implements Handler {
                     handlerExtractInfo(response, extractInfo);
                 }
             } else {
+                // 这儿抛出的异常信息。需要进行衔接
                 List<ExtractInfo> byParentId = extractInfoMapper.findByParentId(Integer.valueOf(parentId));
                 for (ExtractInfo extractInfo : byParentId) {
                     extractInfo.setTraceId(response.getTraceId());
                     extractInfo.setParentTraceId(response.getParentTraceId());
+                    // 这里会增加一个parentTraceId。
                     extractInfo.addParentTraceId(response.getTraceId());
                     handlerExtractInfo(response, extractInfo);
                 }
@@ -113,7 +120,19 @@ public class ExtractHandler implements Handler {
                  * 也可能为文件数据类型，若是文件数据类型，则这里的result保存的是 文件存储地址
                  */
                 if (extractType == 1) handlerHtmlString(extract, extractInfo);
-                else {
+                else if (extractType == 4 && resultType == 6) {// 如果是一个需要存储的文件的时候
+                    String dir = "ljj-crawler/" + extractInfo.getTaskId() + "/" + extractInfo.getParentTraceId().get(0);
+
+//                    for (int i = 0; i < parentTraceId.size() - 1; i++) {
+//                        dir = dir + "/" + parentTraceId.get(i);
+//                    }
+                    FileUtils.mkdir(dir);
+                    URL currentURL = response.getCurrentURL();
+                    String s = UrlUtils.fileSuffix(currentURL.toString());
+
+                    FileUtils.saveFile(response.getResponseBytes(), s, dir);
+                    //TODO 关于存储的深度问题思考
+                } else {
                     extractInfo.setExtractResult(extract);
                 }
                 log.info("extract field success ,traceId={}, parentTraceId={}, field_name={},field_value={}",
@@ -122,7 +141,9 @@ public class ExtractHandler implements Handler {
             } else {// 有子解析任务
                 // 当前解析方式为 html解析，并且当前返回类型为array的时候，比如表格的行，图书的章节列表（即多结果，并且多条结果中又包含一个或多个字段信息）
                 extractInfo.setExtractResult(extract);
-                if (extractType == 0 && resultType == 1) handlerHtmlArray(response, extractInfo);
+                if (extractType == 1 && resultType == 1) handlerHtmlArray(response, extractInfo);
+                else if (extractType == 1 && resultType == 3) handlerHtmlLink(response, extractInfo);
+
             }
         }
     }
@@ -181,10 +202,26 @@ public class ExtractHandler implements Handler {
                     info.getParentTraceId().add(extractInfo.getTraceId());
                 Response res = new Response(response);
                 res.setResponseBytes(nodes.get(start).outerHtml().getBytes());
+                res.setResponseBody(nodes.get(start).outerHtml());
+                res.setParentId(String.valueOf(extractInfo.getId()));
                 handlerExtractInfo(res, info);
             }
         }
     }
 
+    private void handlerHtmlLink(Response response, ExtractInfo extractInfo) {
+        Document doc = Jsoup.parse(extractInfo.getExtractResult(), "", Parser.xmlParser());
+        Element element = doc.selectFirst(extractInfo.getExtractParam());
+        if (element != null) {
+            if (extractInfo.getExtractAttr() != null) {
+                String attr = element.attr(extractInfo.getExtractAttr()); // 这个attr就是一个url
+                //TODO url 校验
+                // 生成request
+                Request request = Request.create(extractInfo);
+                request.setUrl(attr);
+                scheduler.pushRequest(request);
+            }
+        } else return;
+    }
 
 }

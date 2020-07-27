@@ -73,6 +73,7 @@ public class Response implements Task {
         this.taskId = response.getTaskId();
         this.traceId = response.getTraceId();
         this.parentTraceId = response.getParentTraceId();
+        this.parentId = response.getParentId();
         this.statusCode = response.getStatusCode();
         this.headers = response.getHeaders();
 

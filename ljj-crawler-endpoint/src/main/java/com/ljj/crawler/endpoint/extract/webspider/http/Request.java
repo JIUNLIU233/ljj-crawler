@@ -80,6 +80,15 @@ public class Request implements Task {
         return request;
     }
 
+    public static Request create(Response response){
+        Request request = new Request();
+        request.setTaskId(response.getTaskId());
+        request.setTraceId(response.getTraceId());
+        request.setParentTraceId(response.getParentTraceId());
+        request.setParentId(String.valueOf(response.getParentId()));
+        return request;
+    }
+
 
     public String getParentId() {
         return parentId;

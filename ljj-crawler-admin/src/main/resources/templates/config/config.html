@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>任务配置</title>
+    <link rel="stylesheet" href="../layui/css/layui.css">
+    <style>
+        .layui-table td .layui-form-select .layui-input {
+            height: 28px;
+        }
+
+    </style>
+</head>
+<body>
+<div class="layui-collapse">
+    <div class="layui-colla-item">
+        <h2 class="layui-colla-title">任务基本信息配置</h2>
+        <div class="layui-colla-content layui-show">
+            <table id="taskInfo" lay-filter="taskInfo"></table>
+        </div>
+    </div>
+    <div class="layui-colla-item">
+        <h2 class="layui-colla-title">任务规则配置</h2>
+        <div class="layui-colla-content layui-show">
+            <button class="layui-btn" id="addRule">新增规则</button>
+            <table id="taskRule" lay-filter="taskRule"></table>
+            <script type="text/html" id="deleteRule">
+                <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+            </script>
+
+        </div>
+    </div>
+    <div class="layui-colla-item">
+        <h2 class="layui-colla-title">任务解析配置</h2>
+        <div class="layui-colla-content layui-show">
+            <!--<button class="layui-btn" id="addExtract">新增解析规则</button>-->
+            <table id="extractInfo" lay-filter="extractInfo" style="height: 1080px"></table>
+            <script type="text/html" id="toolbarDemo">
+                <div class="layui-btn-group">
+                    <button class="layui-btn layui-btn-sm" lay-event="add"><i class="layui-icon">&#xe654;</i>新增</button>
+                    <button class="layui-btn layui-btn-sm" lay-event="updata"><i class="layui-icon">&#xe642;</i>修改
+                    </button>
+                    <button class="layui-btn layui-btn-sm" lay-event="delete"><i class="layui-icon">&#xe640;</i>删除
+                    </button>
+                </div>
+            </script>
+        </div>
+
+    </div>
+</div>
+
+
+<script src="../layui/layui.js"></script>
+<script>
+    //一般直接写在一个js文件中
+    layui.use(['layer', 'form', 'element', 'table'], function () {
+        var layer = layui.layer
+            , form = layui.form
+            , table = layui.table
+            , $ = layui.$
+            , element = layui.element;
+
+
+        table.render({
+            elem: '#taskInfo'
+            , url: ''
+            , data: [
+                {name: '请输入任务名称', start_url: '请输入任务起始url', have_rule: '1：url有规则，0：url 无规则 '}
+            ]
+            , cols: [[
+                {field: 'name', title: '任务名称', edit: 'text'},
+                {field: 'start_url', title: '任务起始url', edit: 'text'},
+                {field: 'comment', title: '爬虫任务描述', edit: 'text'}
+            ]]
+        });
+
+        table.render({
+            elem: '#taskRule'
+            , url: ''
+            , data: []
+            , cols: [[
+                {field: 'field', title: '规则字段', edit: 'text'},
+                {field: 'ruleType', title: '规则类型', edit: 'text'},
+                {field: 'ruleParam', title: '规则参数', edit: 'text'},
+                {toolbar: '#deleteRule'}
+            ]]
+        });
+
+        /**
+         * task_info 修改
+         */
+        table.on('edit(taskInfo)', function (obj) {
+            var value = obj.value //得到修改后的值
+                , data = obj.data //得到所在行所有键值
+                , field = obj.field; //得到字段
+            layer.msg(field + ' 字段更改为：' + value);
+        });
+
+        // 新增链接规则
+        $("#addRule").click(function () {
+            var obj = {};
+            rules = table.cache.taskRule;
+            rules.push(obj);
+            table.reload("taskRule", {
+                data: rules,
+            })
+        });
+
+        // 删除链接规则
+        table.on('tool(taskRule)', function (obj) {
+            var data = obj.data;
+            if (obj.event == 'del') {
+                layer.confirm('确定删除该条配置数据？', function (index) {
+                    obj.del();
+                    layer.close(index);
+                });
+            }
+        });
+
+
+    });
+    var curId = 0;
+    layui.config({
+        base: '../layui/'
+    }).use(['treeTable', 'table'], function () {
+        let treeTable = layui.treeTable
+            , layer = layui.layer;
+
+        let insTB = treeTable.render({
+            elem: '#extractInfo'
+            , url: ''
+            , toolbar: '#toolbarDemo'
+            , treeColIndex: 1	//树形图标显示在第几列
+            , treeIdName: 'id'
+            , tree: {
+                iconIndex: 1,
+                isPidData: true,
+                idName: 'id',
+                pidName: 'parentId'
+            }
+            , data: []
+            , cols: [[
+                {type: 'radio'},
+                {field: 'id', title: 'ID'},
+                {field: 'content', title: '内容', edit: 'text'},
+                {field: 'contentType', title: '内容类型', templet: content_type, singleLine: false},
+                {field: 'selector', title: 'css选择 参数', edit: 'text'},
+                {field: 'selectorAttr', title: '属性选择', edit: 'text'},
+                {field: 'resultType', title: '解析返回类型', templet: result_type, singleLine: false},
+                {field: 'mount', title: '结果挂载', edit: 'text'},
+                {field: 'arrayRange', title: '数组范围', edit: 'text'},
+            ]]
+        });
+
+
+        treeTable.on('toolbar(extractInfo)', function (obj) {
+            if (obj.event == 'add') {
+                let checkStatus = insTB.checkStatus();
+                let length = checkStatus.length;
+                if (length == 0) { // 这个为创建第一层配置信息
+                    let newData = {id: curId}
+                    curId = curId + 1;
+                    let data = insTB.getData();
+                    data.push(newData);
+                    insTB.renderBodyData(data);
+                    insTB.reload();
+                } else {
+                    let pid = checkStatus[length - 1].id;
+                    let newData = {id: curId, parentId: pid};
+                    curId = curId + 1;
+                    let data = insTB.getData(); // 这里需要把这个data里面所有的数据都放在最外层
+
+                    curData = [];
+                    readData(data);
+                    curData.push(newData);
+
+                    insTB.renderBodyData(curData);
+                    insTB.reload();
+                    curData = [];
+                }
+            } else if (obj.event == 'delete') {
+                let checkStatus = insTB.checkStatus();
+                let length = checkStatus.length;
+                if (length == 0) {
+                    layer.msg("您未选择要删除的数据");
+                } else {
+                    let pid = checkStatus[length - 1].id;
+                    curData = [];
+                    let data = insTB.getData();
+                    readData(data);
+
+                    let dataTemp = [];
+                    for (let i = 0; i < curData.length; i++) {
+                        let temp = curData[i];
+                        if (temp.id == pid || temp.parentId == pid) {
+                            continue;
+                        } else {
+                            dataTemp.push(temp);
+                        }
+                    }
+                    curData = [];
+                    insTB.renderBodyData(dataTemp);
+                    insTB.reload();
+                }
+            }
+        });
+
+        var curData = [];
+
+        function readData(data) {
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+                delete item.LAY_INDEX;
+                delete item.LAY_CHECKED;
+                delete item.LAY_INDETERMINATE;
+                item.open = true;
+                if (item.children == undefined) {
+                    curData.push(item);
+                } else {
+                    readData(item.children);
+                    delete item.children;
+                    curData.push(item);
+                }
+            }
+        }
+    });
+
+    function content_type() {
+        let contentType = "<select lay-filter=\"contentType\">";
+        let typeData = [
+            {id: 1, type: 'HTML'},
+            {id: 2, type: 'JSON'},
+            {id: 3, type: 'LINK'},
+            {id: 4, type: 'STATIC'},
+            {id: 5, type: 'BASE64'}
+        ];
+        for (k in typeData) {
+            contentType += '<option value=' + typeData[k].id + '>' + typeData[k].type + '</option>';
+        }
+        contentType += '</select>';
+        return contentType;
+    }
+
+    function result_type() {
+        let resultType = "<select lay-filter=\"resultType\">";
+        let typeData = [
+            {id: 1, type: 'string'},
+            {id: 2, type: 'array'},
+        ];
+        for (k in typeData) {
+            resultType += '<option value=' + typeData[k].id + '>' + typeData[k].type + '</option>';
+        }
+        resultType += '</select>';
+        return resultType;
+    }
+</script>
+</body>
+
+</html>

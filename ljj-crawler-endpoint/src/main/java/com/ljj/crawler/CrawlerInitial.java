@@ -1,4 +1,4 @@
-package com.ljj.crawler.extract;
+package com.ljj.crawler;
 
 import com.ljj.crawler.core.Task;
 import com.ljj.crawler.core.scheduler.QueueScheduler;
@@ -6,6 +6,7 @@ import com.ljj.crawler.core.scheduler.Scheduler;
 import com.ljj.crawler.extract.download.DownloadHandler;
 import com.ljj.crawler.extract.handler.ExtractHandler;
 import com.ljj.crawler.extract.handler.TaskHandler;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
  * Create time 2020/7/27
  **/
 @Component
+@Slf4j
 public class CrawlerInitial {
     private TaskHandler taskHandler;
     private ExtractHandler extractHandler;
@@ -42,6 +44,7 @@ public class CrawlerInitial {
      */
     public void start(Scheduler sc) {
         this.scheduler = sc == null ? this.scheduler : sc;
+        log.info("init crawler container >>> scheduler={}", this.scheduler);
         taskHandler.init(this.scheduler);
 
 
@@ -82,7 +85,9 @@ public class CrawlerInitial {
         downloadThread.setName("downloader thread");
         extractThread.setName("extract thread");
         downloadThread.start();
+        log.info("downloader start >>> successful");
         extractThread.start();
+        log.info("extract handler start >>> successful");
 
     }
 }

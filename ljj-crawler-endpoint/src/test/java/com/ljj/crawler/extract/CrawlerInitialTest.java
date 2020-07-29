@@ -1,12 +1,11 @@
 package com.ljj.crawler.extract;
 
+import com.ljj.crawler.CrawlerInitial;
 import com.ljj.crawler.core.Task;
 import com.ljj.crawler.extract.handler.TaskHandler;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.scheduling.annotation.Async;
 
 import java.util.List;
 

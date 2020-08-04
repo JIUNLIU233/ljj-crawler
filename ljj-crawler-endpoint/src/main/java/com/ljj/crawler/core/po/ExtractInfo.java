@@ -45,8 +45,8 @@ public class ExtractInfo implements Task, Cloneable {
         extractInfo.setTid(task.getTid() == null ? null : Integer.valueOf(task.getTid()));
         extractInfo.setTraceId(task.getTraceId());
         try {
-            Integer integer = Integer.valueOf(task.getPid());
-            extractInfo.setPid(task.getPid() == null ? null : integer);
+            Integer integer = Integer.valueOf(task.getPId());
+            extractInfo.setPid(task.getPId() == null ? null : integer);
         } catch (Exception e) {
         }
         extractInfo.setPTraceId(task.getPTraceId());
@@ -59,7 +59,7 @@ public class ExtractInfo implements Task, Cloneable {
     }
 
     @Override
-    public String getPid() {
+    public String getPId() {
         return String.valueOf(pid);
     }
 

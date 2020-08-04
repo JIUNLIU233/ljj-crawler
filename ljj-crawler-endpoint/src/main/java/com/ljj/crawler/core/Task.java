@@ -22,7 +22,7 @@ public interface Task {
      *
      * @return
      */
-    String getPid();
+    String getPId();
 
     /**
      * 获取流程id

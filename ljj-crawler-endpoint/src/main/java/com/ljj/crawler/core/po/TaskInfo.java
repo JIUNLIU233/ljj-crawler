@@ -41,7 +41,7 @@ public class TaskInfo implements Task {
     }
 
     @Override
-    public String getPid() {
+    public String getPId() {
         return null;
     }
 

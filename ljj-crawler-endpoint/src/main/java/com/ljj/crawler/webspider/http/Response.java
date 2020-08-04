@@ -2,7 +2,6 @@ package com.ljj.crawler.webspider.http;
 
 
 
-import com.ljj.crawler.common.utils.TraceUtil;
 import com.ljj.crawler.core.Task;
 import org.apache.http.client.CookieStore;
 
@@ -61,7 +60,7 @@ public class Response implements Task {
         this.taskId = task.getTid();
         this.traceId = task.getTraceId();
         this.parentTraceId = task.getPTraceId();
-        this.parentId = task.getPid();
+        this.parentId = task.getPId();
     }
 
 
@@ -137,7 +136,7 @@ public class Response implements Task {
     }
 
     @Override
-    public String getPid() {
+    public String getPId() {
         return this.parentId;
     }
 

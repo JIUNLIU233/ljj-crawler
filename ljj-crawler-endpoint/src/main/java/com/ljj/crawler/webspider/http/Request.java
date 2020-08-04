@@ -65,7 +65,7 @@ public class Request implements Task {
     public static Request create(Task task) {
         Request request = new Request();
         request.taskId = task.getTid();
-        request.parentId = task.getPid();
+        request.parentId = task.getPId();
         request.traceId = task.getTraceId();
         request.parentTraceId = task.getPTraceId();
         if (task instanceof TaskInfo)
@@ -199,7 +199,7 @@ public class Request implements Task {
     }
 
     @Override
-    public String getPid() {
+    public String getPId() {
         return this.parentId;
     }
 

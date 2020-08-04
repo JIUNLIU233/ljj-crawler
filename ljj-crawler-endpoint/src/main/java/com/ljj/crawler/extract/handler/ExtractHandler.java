@@ -54,7 +54,7 @@ public class ExtractHandler implements AbstractHandler {
         log.info("extract handler start >>> task={}", JSON.toJSONString(task));
         if (scheduler == null) throw new RuntimeException("task handler 未初始化，请初始化后再进行执行");
         List<ExtractInfo> extractInfos = null;
-        String pid = task.getPid();
+        String pid = task.getPId();
         // 初始任务时，不从url直接开始，所以这里传入的是一个task info 信息，这里就需要通过task id 进行查找解析配置
         // 若是后续url任务，则直接通过其 id 查找其子解析信息
 
@@ -148,6 +148,9 @@ public class ExtractHandler implements AbstractHandler {
                     scheduler.pushData(extractInfo);
                 }
             }
+
+            //TODO 同一层的数据解析完毕后，进行ack
+
         }
     }
 

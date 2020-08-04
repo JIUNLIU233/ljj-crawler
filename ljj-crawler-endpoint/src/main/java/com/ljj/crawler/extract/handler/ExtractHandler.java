@@ -75,6 +75,15 @@ public class ExtractHandler implements AbstractHandler {
                     extractInfo.setContent(((ExtractInfo) task).getResult());
                     extractInfo.setContentBytes(((ExtractInfo) task).getResultBytes());
                 }
+                // 数据挂载的处理
+                String mount = extractInfo.getMount();
+                if (mount != null && mount.contains("[new]")) {
+                    //TODO 需要进行单独数据处理
+                } else {
+                    extractInfo.setTraceId(task.getTraceId());
+                }
+
+
                 String content = extractInfo.getContent();
                 Integer contentType = extractInfo.getContentType();
                 if (contentType == null || contentType == 0 || contentType == 1) {

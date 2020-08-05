@@ -1,5 +1,6 @@
 package com.ljj.crawler.core.mapper;
 
+import com.ljj.crawler.common.constant.TableKey;
 import com.ljj.crawler.core.po.TaskRule;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
@@ -13,6 +14,6 @@ import java.util.List;
 @Mapper
 public interface RuleMapper {
 
-    @Select("select * from task_rule where tid=#{tid}")
+    @Select("select * from "+ TableKey.ruleTable +" where tid=#{tid}")
     List<TaskRule> findByTid(Integer tid);
 }

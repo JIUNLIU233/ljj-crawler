@@ -1,4 +1,4 @@
-package com.ljj.crawler.extract.handler;
+package com.ljj.crawler.data;
 
 import com.ljj.crawler.common.utils.MountUtils;
 import com.ljj.crawler.core.Task;
@@ -25,8 +25,12 @@ import java.util.List;
 @Component
 public class DataMongoHandler implements AbstractHandler {
 
+    private final MongoTemplate mongoTemplate;
+
     @Autowired
-    private MongoTemplate mongoTemplate;
+    public DataMongoHandler(MongoTemplate mongoTemplate) {
+        this.mongoTemplate = mongoTemplate;
+    }
 
     @Override
     public void handler(Task task) {

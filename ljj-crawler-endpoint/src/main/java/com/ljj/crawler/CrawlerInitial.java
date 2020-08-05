@@ -4,7 +4,7 @@ import com.ljj.crawler.core.Task;
 import com.ljj.crawler.core.scheduler.QueueScheduler;
 import com.ljj.crawler.core.scheduler.Scheduler;
 import com.ljj.crawler.extract.download.DownloadHandler;
-import com.ljj.crawler.extract.handler.DataMongoHandler;
+import com.ljj.crawler.data.DataMongoHandler;
 import com.ljj.crawler.extract.handler.ExtractHandler;
 import com.ljj.crawler.extract.handler.TaskHandler;
 import lombok.extern.slf4j.Slf4j;

@@ -1,5 +1,6 @@
 package com.ljj.crawler.extract.handler;
 
+import com.ljj.crawler.common.utils.MountUtils;
 import com.ljj.crawler.core.Task;
 import com.ljj.crawler.core.handler.AbstractHandler;
 import com.ljj.crawler.core.po.ExtractInfo;
@@ -35,12 +36,27 @@ public class DataMongoHandler implements AbstractHandler {
 
             String result = ((ExtractInfo) task).getResult();
             String mount = ((ExtractInfo) task).getMount();
-            mount = mount.split("\\.")[2];
 
-            if (pTraceId == null || pTraceId.size() < 1) { //没有父关联对象，直接存储即可。
-                //TODO 目前仅仅针对单一的数据挂载
-                mongoTemplate.upsert(Query.query(Criteria.where("traceId").is(traceId)), Update.update(mount, result), "xbqg");
-                mongoTemplate.upsert(Query.query(Criteria.where("traceId").is(traceId)), Update.update("mountTime", new Date()), "xbqg");
+            String mountKey = MountUtils.getMountKey(mount);
+            String collectionName = MountUtils.getCollectionName(mount);
+
+            if (MountUtils.isArrayMount(mount)) { // 如果是挂载数据的数组子节点中，需要判断数组中的对象的traceId和当前节点的traceId相同。或者干脆不支持数组，
+                // 涉及到数组的全部挂载到其他集合中。
+
+            } else {// 是直接挂载的 或者是挂载到对应对象下面的，不涉及下标。
+                if (MountUtils.isNewTraceId(mount)) {
+                    mongoTemplate.upsert(
+                            Query.query(Criteria.where("traceId").is(traceId)),
+                            Update.update(mountKey, result)
+                                    .set("mountTime", new Date())
+                                    .set("parentId", pTraceId.get(pTraceId.size() - 1)),
+                            collectionName);
+                } else {
+                    mongoTemplate.upsert(
+                            Query.query(Criteria.where("traceId").is(traceId)),
+                            Update.update(mountKey, result).set("mountTime", new Date()),
+                            collectionName);
+                }
             }
 
         }

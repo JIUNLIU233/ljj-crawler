@@ -46,7 +46,9 @@
                 </div>
             </script>
         </div>
-
+    </div>
+    <div>
+        <button type="button" class="layui-btn layui-btn-fluid" id="submit">提交配置</button>
     </div>
 </div>
 
@@ -54,19 +56,21 @@
 <script src="../layui/layui.js"></script>
 <script>
     //一般直接写在一个js文件中
-    layui.use(['layer', 'form', 'element', 'table'], function () {
-        var layer = layui.layer
-            , form = layui.form
+    var curId = 0;
+    layui.config({
+        base: '../layui/'
+    }).use(['layer', 'treeTable', 'table'], function () {
+
+        let treeTable = layui.treeTable
+            , layer = layui.layer
             , table = layui.table
-            , $ = layui.$
-            , element = layui.element;
+            , $ = layui.$;
 
-
-        table.render({
+        let taskTB = table.render({
             elem: '#taskInfo'
             , url: ''
             , data: [
-                {name: '请输入任务名称', start_url: '请输入任务起始url', have_rule: '1：url有规则，0：url 无规则 '}
+                {name: '请输入任务名称', start_url: '请输入任务起始url'}
             ]
             , cols: [[
                 {field: 'name', title: '任务名称', edit: 'text'},
@@ -75,13 +79,13 @@
             ]]
         });
 
-        table.render({
+        let ruleTB = table.render({
             elem: '#taskRule'
             , url: ''
             , data: []
             , cols: [[
                 {field: 'field', title: '规则字段', edit: 'text'},
-                {field: 'ruleType', title: '规则类型', edit: 'text'},
+                {field: 'ruleType', title: '规则类型', edit: 'text'}, // TODO 这里可以弄成一个下拉框
                 {field: 'ruleParam', title: '规则参数', edit: 'text'},
                 {toolbar: '#deleteRule'}
             ]]
@@ -94,13 +98,12 @@
             var value = obj.value //得到修改后的值
                 , data = obj.data //得到所在行所有键值
                 , field = obj.field; //得到字段
-            layer.msg(field + ' 字段更改为：' + value);
         });
 
         // 新增链接规则
         $("#addRule").click(function () {
-            var obj = {};
-            rules = table.cache.taskRule;
+            let obj = {};
+            let rules = table.cache.taskRule;
             rules.push(obj);
             table.reload("taskRule", {
                 data: rules,
@@ -109,7 +112,7 @@
 
         // 删除链接规则
         table.on('tool(taskRule)', function (obj) {
-            var data = obj.data;
+            let data = obj.data;
             if (obj.event == 'del') {
                 layer.confirm('确定删除该条配置数据？', function (index) {
                     obj.del();
@@ -119,15 +122,10 @@
         });
 
 
-    });
-    var curId = 0;
-    layui.config({
-        base: '../layui/'
-    }).use(['treeTable', 'table'], function () {
-        let treeTable = layui.treeTable
-            , layer = layui.layer;
-
-        let insTB = treeTable.render({
+        /**
+         *任务解析配置表格
+         */
+        let exTB = treeTable.render({
             elem: '#extractInfo'
             , url: ''
             , toolbar: '#toolbarDemo'
@@ -154,40 +152,44 @@
         });
 
 
+        /**
+         *
+         * 任务解析表格的编辑
+         **/
         treeTable.on('toolbar(extractInfo)', function (obj) {
             if (obj.event == 'add') {
-                let checkStatus = insTB.checkStatus();
+                let checkStatus = exTB.checkStatus();
                 let length = checkStatus.length;
                 if (length == 0) { // 这个为创建第一层配置信息
                     let newData = {id: curId}
                     curId = curId + 1;
-                    let data = insTB.getData();
+                    let data = exTB.getData();
                     data.push(newData);
-                    insTB.renderBodyData(data);
-                    insTB.reload();
+                    exTB.renderBodyData(data);
+                    exTB.reload();
                 } else {
                     let pid = checkStatus[length - 1].id;
                     let newData = {id: curId, parentId: pid};
                     curId = curId + 1;
-                    let data = insTB.getData(); // 这里需要把这个data里面所有的数据都放在最外层
+                    let data = exTB.getData(); // 这里需要把这个data里面所有的数据都放在最外层
 
                     curData = [];
                     readData(data);
                     curData.push(newData);
 
-                    insTB.renderBodyData(curData);
-                    insTB.reload();
+                    exTB.renderBodyData(curData);
+                    exTB.reload();
                     curData = [];
                 }
             } else if (obj.event == 'delete') {
-                let checkStatus = insTB.checkStatus();
+                let checkStatus = exTB.checkStatus();
                 let length = checkStatus.length;
                 if (length == 0) {
                     layer.msg("您未选择要删除的数据");
                 } else {
                     let pid = checkStatus[length - 1].id;
                     curData = [];
-                    let data = insTB.getData();
+                    let data = exTB.getData();
                     readData(data);
 
                     let dataTemp = [];
@@ -200,8 +202,8 @@
                         }
                     }
                     curData = [];
-                    insTB.renderBodyData(dataTemp);
-                    insTB.reload();
+                    exTB.renderBodyData(dataTemp);
+                    exTB.reload();
                 }
             }
         });
@@ -224,8 +226,40 @@
                 }
             }
         }
+
+        $("#submit").click(function () {
+            // 1、获取任务基本配置信息
+            let taskData = table.cache.taskInfo;
+            console.log(JSON.stringify(taskData));
+            // 2、获取任务规则配置信息
+            let ruleData = table.cache.taskRule;
+            console.log(JSON.stringify(ruleData));
+            // 3、获取任务解析配置信息
+            let extractData = exTB.getData();
+            console.log(JSON.stringify(extractData));
+
+            let requestObj = {task: taskData[0], rule: ruleData, extract: extractData};
+            console.log("request-body:" + JSON.stringify(requestObj));
+
+            $.ajax({
+                type: 'post',
+                url: "/config/add",
+                contentType: 'application/json',
+                data: JSON.stringify(requestObj),
+                dataType: 'json',
+                success: ss()
+            });
+        });
     });
 
+    function ss() {
+        layer.msg("信息提交成功");
+    }
+
+    /**
+     * content type 的下拉框
+     * @returns {string}
+     */
     function content_type() {
         let contentType = "<select lay-filter=\"contentType\">";
         let typeData = [
@@ -242,6 +276,10 @@
         return contentType;
     }
 
+    /**
+     * result type 的下拉框
+     * @returns {string}
+     */
     function result_type() {
         let resultType = "<select lay-filter=\"resultType\">";
         let typeData = [

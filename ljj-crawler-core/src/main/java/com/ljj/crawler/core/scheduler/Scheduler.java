@@ -1,6 +1,5 @@
 package com.ljj.crawler.core.scheduler;
 
-import com.ljj.crawler.core.po.ExtractInfo;
 import com.ljj.crawler.core.Task;
 import com.ljj.crawler.webspider.http.Request;
 

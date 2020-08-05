@@ -9,8 +9,6 @@ import javax.annotation.Resource;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 /**
  * Create by JIUN·LIU
  * Create time 2020/7/27

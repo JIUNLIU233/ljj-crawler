@@ -1,6 +1,7 @@
 package com.ljj.crawler.extract;
 
 import com.ljj.crawler.CrawlerInitial;
+import com.ljj.crawler.EndpointApplication;
 import com.ljj.crawler.core.Task;
 import com.ljj.crawler.extract.handler.TaskHandler;
 import org.junit.jupiter.api.Test;
@@ -13,7 +14,7 @@ import java.util.List;
  * Create by JIUN·LIU
  * Create time 2020/7/27
  **/
-@SpringBootTest
+@SpringBootTest(classes = EndpointApplication.class)
 class CrawlerInitialTest {
 
     @Autowired

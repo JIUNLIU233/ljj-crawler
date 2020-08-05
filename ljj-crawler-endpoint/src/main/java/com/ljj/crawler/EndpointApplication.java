@@ -9,8 +9,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class EndpointApplication implements ApplicationRunner {
 
+    private final CrawlerInitial crawlerInitial;
+
     @Autowired
-    private CrawlerInitial crawlerInitial;
+    public EndpointApplication(CrawlerInitial crawlerInitial) {
+        this.crawlerInitial = crawlerInitial;
+    }
 
     public static void main(String[] args) {
         SpringApplication.run(EndpointApplication.class, args);

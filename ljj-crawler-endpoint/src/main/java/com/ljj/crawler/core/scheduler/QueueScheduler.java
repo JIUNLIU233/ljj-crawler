@@ -19,8 +19,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class QueueScheduler implements Scheduler {
 
 
-    LinkedBlockingQueue<Request> requests = new LinkedBlockingQueue<>();
-    LinkedBlockingQueue<Task> extractInfos = new LinkedBlockingQueue<>();
+    LinkedBlockingQueue<Request> requests = new LinkedBlockingQueue<>();    // 请求队列
+    LinkedBlockingQueue<Task> extractInfos = new LinkedBlockingQueue<>();   // 解析队列
+    LinkedBlockingQueue<Task> dataInfos = new LinkedBlockingQueue<>();      // 数据队列
 
 
     @Override
@@ -57,10 +58,16 @@ public class QueueScheduler implements Scheduler {
     public void pushData(Task task) {
         ExtractInfo extractInfo = (ExtractInfo) task;
         log.info("receive data traceId={}, mount={},data={}", extractInfo.getTraceId(), extractInfo.getMount(), extractInfo.getResult());
+        try {
+            dataInfos.put(extractInfo);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public ExtractInfo pollData() {
-        return null;
+        Task poll = dataInfos.poll();
+        return (ExtractInfo) poll;
     }
 }

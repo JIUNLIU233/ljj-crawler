@@ -33,6 +33,28 @@ public class ExtractService {
     }
 
     /**
+     * 解析配置的导入
+     *
+     * @param extracts
+     * @param tid
+     */
+    public void importConfig(JSONArray extracts, Integer tid) {
+        if (extracts == null) return;
+        for (int i = 0; i < extracts.size(); i++) {
+            JSONObject extractJSON = extracts.getJSONObject(i);
+            JSONArray child = extractJSON.getJSONArray("child");
+            ExtractInfo extractInfo = extractJSON.toJavaObject(ExtractInfo.class);
+            extractInfo.setTid(tid);
+            // 判断是否含有子解析
+            if (child == null || child.size() < 1) { // 只插入本条记录即可
+                extractMapper.insert(extractInfo);
+            } else {
+                importChild(extractJSON, tid);
+            }
+        }
+    }
+
+    /**
      * 查找配置的子配置信息
      *
      * @param parentExtract
@@ -65,28 +87,6 @@ public class ExtractService {
         return result;
     }
 
-
-    /**
-     * 解析配置的导入
-     *
-     * @param extracts
-     * @param tid
-     */
-    public void importConfig(JSONArray extracts, Integer tid) {
-        if (extracts == null) return;
-        for (int i = 0; i < extracts.size(); i++) {
-            JSONObject extractJSON = extracts.getJSONObject(i);
-            JSONArray child = extractJSON.getJSONArray("child");
-            ExtractInfo extractInfo = extractJSON.toJavaObject(ExtractInfo.class);
-            extractInfo.setTid(tid);
-            // 判断是否含有子解析
-            if (child == null || child.size() < 1) { // 只插入本条记录即可
-                extractMapper.insert(extractInfo);
-            } else {
-                importChild(extractJSON, tid);
-            }
-        }
-    }
 
     private void importChild(JSONObject extractJSON, Integer tid) { //  到了这里基本上是肯定有子解析的。暂时不做判断
         JSONArray child = extractJSON.getJSONArray("child"); // 查询子解析

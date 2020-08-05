@@ -4,6 +4,7 @@ import com.ljj.crawler.core.Task;
 import com.ljj.crawler.core.scheduler.QueueScheduler;
 import com.ljj.crawler.core.scheduler.Scheduler;
 import com.ljj.crawler.extract.download.DownloadHandler;
+import com.ljj.crawler.extract.handler.DataMongoHandler;
 import com.ljj.crawler.extract.handler.ExtractHandler;
 import com.ljj.crawler.extract.handler.TaskHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -21,15 +22,16 @@ public class CrawlerInitial {
     private TaskHandler taskHandler;
     private ExtractHandler extractHandler;
     private DownloadHandler downloadHandler;
+    private DataMongoHandler dataMongoHandler;
     private Scheduler scheduler = new QueueScheduler();
 
     @Autowired
-    public CrawlerInitial(TaskHandler taskHandler, ExtractHandler extractHandler, DownloadHandler downloadHandler) {
+    public CrawlerInitial(TaskHandler taskHandler, ExtractHandler extractHandler, DownloadHandler downloadHandler, DataMongoHandler dataMongoHandler) {
         this.taskHandler = taskHandler;
         this.extractHandler = extractHandler;
         this.downloadHandler = downloadHandler;
+        this.dataMongoHandler = dataMongoHandler;
     }
-
 
     public void start() {
         start(null);
@@ -48,6 +50,9 @@ public class CrawlerInitial {
         taskHandler.init(this.scheduler);
 
 
+        /**
+         * 下载
+         */
         Thread downloadThread = new Thread(() -> {
             downloadHandler.init(this.scheduler);
             while (true) {
@@ -65,6 +70,9 @@ public class CrawlerInitial {
             }
         });
 
+        /**
+         * 解析
+         */
         Thread extractThread = new Thread(() -> {
             extractHandler.init(this.scheduler);
             while (true) {
@@ -81,13 +89,33 @@ public class CrawlerInitial {
                 }
             }
         });
+        Thread dataSaveThread = new Thread(() -> {
+            while (true) {
+                Task extractInfo = this.scheduler.pollData();
+                if (extractInfo == null) {
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    continue;
+                } else {
+                    dataMongoHandler.handler(extractInfo);
+                }
+            }
+        });
 
         downloadThread.setName("downloader thread");
         extractThread.setName("extract thread");
+        dataSaveThread.setName("data mongo thread");
         downloadThread.start();
         log.info("downloader start >>> successful");
         extractThread.start();
         log.info("extract handler start >>> successful");
+
+        dataSaveThread.start();
+        log.info("data mongo handler start >>> successful");
+
 
     }
 }

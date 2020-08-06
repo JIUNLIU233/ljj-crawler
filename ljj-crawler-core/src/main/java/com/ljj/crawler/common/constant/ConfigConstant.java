@@ -11,4 +11,5 @@ public class ConfigConstant {
     public static final String taskConfigKey = "task";
     public static final String ruleConfigKey = "rule";
     public static final String extractConfigKey = "extract";
+    public static final String extractChildKey = "child";
 }

@@ -42,6 +42,7 @@ public class ConfigController {
         JSONObject taskObj = configObj.getJSONObject(ConfigConstant.taskConfigKey);
         TaskInfo taskInfo = taskService.importTask(taskObj);
         JSONArray ruleArray = configObj.getJSONArray(ConfigConstant.ruleConfigKey);
+        ruleService.importRule(ruleArray, taskInfo.getId());
         JSONArray extractArray = configObj.getJSONArray(ConfigConstant.extractConfigKey);
         extractService.importConfig(extractArray, taskInfo.getId());
         return new ResponseEntity<>(HttpStatus.OK);

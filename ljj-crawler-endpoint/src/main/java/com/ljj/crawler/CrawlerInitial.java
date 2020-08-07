@@ -1,7 +1,7 @@
 package com.ljj.crawler;
 
 import com.ljj.crawler.core.Task;
-import com.ljj.crawler.core.scheduler.QueueScheduler;
+import com.ljj.crawler.core.scheduler.impl.LocalQueueScheduler;
 import com.ljj.crawler.core.scheduler.Scheduler;
 import com.ljj.crawler.extract.download.DownloadHandler;
 import com.ljj.crawler.data.DataMongoHandler;
@@ -23,7 +23,7 @@ public class CrawlerInitial {
     private ExtractHandler extractHandler;
     private DownloadHandler downloadHandler;
     private DataMongoHandler dataMongoHandler;
-    private Scheduler scheduler = new QueueScheduler();
+    private Scheduler scheduler = new LocalQueueScheduler();
 
     @Autowired
     public CrawlerInitial(TaskHandler taskHandler, ExtractHandler extractHandler, DownloadHandler downloadHandler, DataMongoHandler dataMongoHandler) {
@@ -47,9 +47,28 @@ public class CrawlerInitial {
     public void start(Scheduler sc) {
         this.scheduler = sc == null ? this.scheduler : sc;
         log.info("init crawler container >>> scheduler={}", this.scheduler);
-        taskHandler.init(this.scheduler);
 
 
+        /**
+         * 任务触发
+         */
+        Thread taskThread = new Thread(() -> {
+            taskHandler.init(this.scheduler);
+
+            while (true) {
+                Task taskInfo = this.scheduler.pollTask();
+                if (taskInfo == null) {
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    continue;
+                } else {
+                    taskHandler.handler(taskInfo);
+                }
+            }
+        });
         /**
          * 下载
          */
@@ -89,6 +108,9 @@ public class CrawlerInitial {
                 }
             }
         });
+        /*
+        数据
+         */
         Thread dataSaveThread = new Thread(() -> {
             while (true) {
                 Task extractInfo = this.scheduler.pollData();
@@ -104,10 +126,14 @@ public class CrawlerInitial {
                 }
             }
         });
-
+        taskThread.setName("task thread");
         downloadThread.setName("downloader thread");
         extractThread.setName("extract thread");
         dataSaveThread.setName("data mongo thread");
+
+        taskThread.start();
+        log.info("task start >>> successful");
+
         downloadThread.start();
         log.info("downloader start >>> successful");
         extractThread.start();

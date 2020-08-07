@@ -2,7 +2,7 @@ package com.ljj.crawler;
 
 import com.ljj.crawler.common.utils.AppContext;
 import com.ljj.crawler.core.scheduler.Scheduler;
-import com.ljj.crawler.core.scheduler.impl.KafkaScheduler;
+import com.ljj.crawler.scheduler.KafkaScheduler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;

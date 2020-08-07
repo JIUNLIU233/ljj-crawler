@@ -1,14 +1,14 @@
 package com.ljj.crawler.extract.handler;
 
 import com.alibaba.fastjson.JSON;
-import com.ljj.crawler.core.mapper.RuleMapper;
-import com.ljj.crawler.core.mapper.TaskMapper;
 import com.ljj.crawler.core.po.TaskInfo;
 import com.ljj.crawler.core.po.TaskRule;
 import com.ljj.crawler.common.utils.TraceUtil;
 import com.ljj.crawler.core.Task;
 import com.ljj.crawler.core.handler.AbstractHandler;
 import com.ljj.crawler.core.scheduler.Scheduler;
+import com.ljj.crawler.mapper.RuleMapper;
+import com.ljj.crawler.mapper.TaskMapper;
 import com.ljj.crawler.webspider.http.Request;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

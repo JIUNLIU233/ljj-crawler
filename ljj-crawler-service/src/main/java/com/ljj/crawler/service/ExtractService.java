@@ -1,10 +1,10 @@
-package com.ljj.crawler.core.service;
+package com.ljj.crawler.service;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.ljj.crawler.common.constant.ConfigConstant;
-import com.ljj.crawler.core.mapper.ExtractMapper;
 import com.ljj.crawler.core.po.ExtractInfo;
+import com.ljj.crawler.mapper.ExtractMapper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

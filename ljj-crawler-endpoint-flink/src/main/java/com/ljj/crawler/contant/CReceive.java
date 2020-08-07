@@ -15,6 +15,8 @@ public class CReceive {
     public static final String extractHandlerKey = "extract";
     public static final String dataHandlerKey = "data";
 
+    public static final String cyclePushKey = "cyclePush";
+
 
     public static List<String> cReceives = new ArrayList<String>() {{
         add(taskHandlerKey);

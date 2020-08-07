@@ -2,6 +2,7 @@ package com.ljj.crawler.core.mapper;
 
 import com.alibaba.fastjson.JSON;
 import com.ljj.crawler.core.po.TaskInfo;
+import com.ljj.crawler.mapper.TaskMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 

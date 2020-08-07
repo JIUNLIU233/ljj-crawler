@@ -1,6 +1,7 @@
 package com.ljj.crawler.core.scheduler.impl;
 
 import com.ljj.crawler.EndpointApplication;
+import com.ljj.crawler.scheduler.KafkaScheduler;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -3,9 +3,7 @@ package com.ljj.crawler;
 
 import com.ljj.crawler.contant.CReceive;
 import com.ljj.crawler.deserialization.KafkaStreamDataDes;
-import com.ljj.crawler.function.ExtractProcess;
-import com.ljj.crawler.function.SourceDisProcess;
-import com.ljj.crawler.function.TaskProcess;
+import com.ljj.crawler.function.*;
 import com.ljj.crawler.po.StreamData;
 import com.ljj.crawler.utils.OutPutTagUtils;
 import org.apache.flink.streaming.api.CheckpointingMode;
@@ -15,6 +13,10 @@ import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 import org.apache.flink.util.OutputTag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 
 import java.util.Map;
 import java.util.Properties;
@@ -24,12 +26,40 @@ import java.util.Properties;
  * Create by JIUN·LIU
  * Create time 2020/8/7
  **/
+@Configuration
 public class FlinkEndPointApp {
 
 
-    private static final String crawlerTopic = "ljj_test";
+    @Value("${ljj.crawler.endpoint.topic}")
+    private String endpointTopic;
 
-    public static void main(String[] args) throws Exception {
+
+    private TaskProcess taskProcess;
+    private DownloadProcess downloadProcess;
+    private ExtractProcess extractProcess;
+    private DataProcess dataProcess;
+    private SourceDisProcess sourceDisProcess;
+
+    public void init() {
+        sourceDisProcess.setSrt(OutPutTagUtils.getSourceOutTag());
+        taskProcess.setOutputTag(OutPutTagUtils.getCycleTag());
+        downloadProcess.setOutputTag(OutPutTagUtils.getCycleTag());
+        extractProcess.setOutputTag(OutPutTagUtils.getCycleTag());
+        dataProcess.setOutputTag(OutPutTagUtils.getCycleTag());
+    }
+
+    @Autowired
+    public FlinkEndPointApp(TaskProcess taskProcess, DownloadProcess downloadProcess, ExtractProcess extractProcess, DataProcess dataProcess, SourceDisProcess sourceDisProcess) {
+        this.taskProcess = taskProcess;
+        this.downloadProcess = downloadProcess;
+        this.extractProcess = extractProcess;
+        this.dataProcess = dataProcess;
+        this.sourceDisProcess = sourceDisProcess;
+    }
+
+
+    public void start() throws Exception {
+        init();
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         // 开启Checkpoinit
@@ -55,11 +85,14 @@ public class FlinkEndPointApp {
         consumerProps.setProperty("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         consumerProps.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 
-        FlinkKafkaConsumer<StreamData> consumer = new FlinkKafkaConsumer<>(crawlerTopic, new KafkaStreamDataDes(), consumerProps);
+        FlinkKafkaConsumer<StreamData> consumer = new FlinkKafkaConsumer<>(endpointTopic, new KafkaStreamDataDes(), consumerProps);
 
         // 将数据按照不同的类型输出到不同的支流中。
         SingleOutputStreamOperator<StreamData> dataStream =
-                env.addSource(consumer).process(new SourceDisProcess(OutPutTagUtils.getSourceOutTag()));
+                env.addSource(consumer).process(sourceDisProcess);
+
+        dealStreamData(dataStream);
+
 
         env.execute("ljj-crawler-endpoint-flink");
     }
@@ -70,22 +103,31 @@ public class FlinkEndPointApp {
      *
      * @param dataStream
      */
-    public static void dealStreamData(SingleOutputStreamOperator<StreamData> dataStream) {
+    public void dealStreamData(SingleOutputStreamOperator<StreamData> dataStream) {
         Map<String, OutputTag<StreamData>> sourceOutTag = OutPutTagUtils.getSourceOutTag();
         for (Map.Entry<String, OutputTag<StreamData>> outputTagEntry : sourceOutTag.entrySet()) {
             DataStream<StreamData> sideOutput =
                     dataStream.getSideOutput(outputTagEntry.getValue());
             String key = outputTagEntry.getKey();
             if (CReceive.taskHandlerKey.equalsIgnoreCase(key)) {
-                sideOutput.process(new TaskProcess());
+                SingleOutputStreamOperator<StreamData> taskSide = sideOutput.process(taskProcess);
+                dealCycleData(taskSide.getSideOutput(OutPutTagUtils.getCycleTag()));
             } else if (CReceive.downloadHandlerKey.equalsIgnoreCase(key)) {
-
+                SingleOutputStreamOperator<StreamData> downloadSide = sideOutput.process(downloadProcess);
+                dealCycleData(downloadSide.getSideOutput(OutPutTagUtils.getCycleTag()));
             } else if (CReceive.extractHandlerKey.equalsIgnoreCase(key)) {
-                sideOutput.process(new ExtractProcess());
+                SingleOutputStreamOperator<StreamData> extractSide = sideOutput.process(extractProcess);
+                dealCycleData(extractSide.getSideOutput(OutPutTagUtils.getCycleTag()));
             } else if (CReceive.dataHandlerKey.equalsIgnoreCase(key)) {
-
+                SingleOutputStreamOperator<StreamData> dataSide = sideOutput.process(dataProcess);
+                dealCycleData(dataSide.getSideOutput(OutPutTagUtils.getCycleTag()));
             }
         }
+    }
+
+    public void dealCycleData(DataStream<StreamData> cycleStreamSideOutput) {
+        //TODO 重新把cycle中的数据发送到kafka中
+        cycleStreamSideOutput.print();
     }
 
 }

@@ -1,4 +1,4 @@
-package com.ljj.crawler.core.scheduler.impl;
+package com.ljj.crawler.scheduler;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;

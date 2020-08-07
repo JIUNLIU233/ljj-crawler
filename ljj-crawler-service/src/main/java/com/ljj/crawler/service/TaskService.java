@@ -1,8 +1,9 @@
-package com.ljj.crawler.core.service;
+package com.ljj.crawler.service;
+
 
 import com.alibaba.fastjson.JSONObject;
-import com.ljj.crawler.core.mapper.TaskMapper;
 import com.ljj.crawler.core.po.TaskInfo;
+import com.ljj.crawler.mapper.TaskMapper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

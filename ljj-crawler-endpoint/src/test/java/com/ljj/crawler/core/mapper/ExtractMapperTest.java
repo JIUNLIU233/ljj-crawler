@@ -2,6 +2,7 @@ package com.ljj.crawler.core.mapper;
 
 import com.alibaba.fastjson.JSON;
 import com.ljj.crawler.core.po.ExtractInfo;
+import com.ljj.crawler.mapper.ExtractMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 

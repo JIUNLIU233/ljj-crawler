@@ -4,9 +4,10 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.ljj.crawler.common.constant.ConfigConstant;
 import com.ljj.crawler.core.po.TaskInfo;
-import com.ljj.crawler.core.service.ExtractService;
-import com.ljj.crawler.core.service.TaskRuleService;
-import com.ljj.crawler.core.service.TaskService;
+
+import com.ljj.crawler.service.ExtractService;
+import com.ljj.crawler.service.TaskRuleService;
+import com.ljj.crawler.service.TaskService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

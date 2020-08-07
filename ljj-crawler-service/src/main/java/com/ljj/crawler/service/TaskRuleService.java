@@ -1,9 +1,9 @@
-package com.ljj.crawler.core.service;
+package com.ljj.crawler.service;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.ljj.crawler.core.mapper.RuleMapper;
 import com.ljj.crawler.core.po.TaskRule;
+import com.ljj.crawler.mapper.RuleMapper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

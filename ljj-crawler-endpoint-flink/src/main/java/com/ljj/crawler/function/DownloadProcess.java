@@ -8,20 +8,20 @@ import org.apache.flink.util.OutputTag;
 import org.springframework.stereotype.Component;
 
 /**
- * 针对解析的处理
- * <p>
- * Create by JIUN·LIU
- * Create time 2020/8/7
- **/
+ * 功能：
+ *
+ * @Author:JIUNLIU
+ * @data : 2020/8/7 20:56
+ */
 @Component
 @Slf4j
-public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
+public class DownloadProcess extends ProcessFunction<StreamData, StreamData> {
+
     private OutputTag<StreamData> outputTag;
 
-    public ExtractProcess() {
-    }
+    public DownloadProcess(){}
 
-    public ExtractProcess(OutputTag<StreamData> outputTag) {
+    public DownloadProcess(OutputTag<StreamData> outputTag) {
         this.outputTag = outputTag;
     }
 
@@ -34,8 +34,8 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
     }
 
     @Override
-    public void processElement(StreamData value, Context ctx, Collector<StreamData> out) throws Exception {
-        String data = value.getData();
-        log.info("extract process start >>> data={}", data);
+    public void processElement(StreamData streamData, Context context, Collector<StreamData> collector) throws Exception {
+        String data = streamData.getData();
+        log.info("download process start >>> data={}", data);
     }
 }

@@ -15,6 +15,10 @@ import java.util.Map;
  **/
 public class OutPutTagUtils {
 
+    /**
+     * 用于将数据分组的tag
+     * @return
+     */
     public static Map<String, OutputTag<StreamData>> getSourceOutTag() {
         HashMap<String, OutputTag<StreamData>> result = new HashMap<>();
 
@@ -24,5 +28,14 @@ public class OutPutTagUtils {
         }
 
         return result;
+    }
+
+    /**
+     * 用于将数据重新发送到kafka的tag
+     * @return
+     */
+    public static OutputTag<StreamData> getCycleTag() {
+        return new OutputTag<>(CReceive.cyclePushKey, TypeInformation.of(new TypeHint<StreamData>() {
+        }));
     }
 }

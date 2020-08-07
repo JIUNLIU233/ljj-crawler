@@ -1,4 +1,4 @@
-package com.ljj.crawler.core.mapper;
+package com.ljj.crawler.mapper;
 
 import com.ljj.crawler.common.constant.TableKey;
 import com.ljj.crawler.core.po.ExtractInfo;

@@ -75,6 +75,9 @@ public class Request implements Task {
         return request;
     }
 
+    public void setTraceId(String traceId) {
+        this.traceId = traceId;
+    }
 
     public String getParentId() {
         return parentId;

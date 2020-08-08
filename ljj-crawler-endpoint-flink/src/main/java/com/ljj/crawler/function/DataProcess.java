@@ -1,15 +1,19 @@
 package com.ljj.crawler.function;
 
 import com.alibaba.fastjson.JSONObject;
+import com.ljj.crawler.common.utils.AppContext;
 import com.ljj.crawler.common.utils.MountUtils;
 import com.ljj.crawler.contant.CReceive;
 import com.ljj.crawler.core.po.ExtractInfo;
 import com.ljj.crawler.po.StreamData;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -26,23 +30,30 @@ import java.util.List;
  * @Author:JIUNLIU
  * @data : 2020/8/7 21:01
  */
-@Component
+@EnableAutoConfiguration
 @Slf4j
 public class DataProcess extends ProcessFunction<StreamData, StreamData> {
 
-    private OutputTag<StreamData> outputTag;
+    private OutputTag<String> outputTag;
 
+    private MongoTemplate mongoTemplate;
 
     public DataProcess() {
     }
 
-    public DataProcess(OutputTag<StreamData> outputTag) {
+    public DataProcess(OutputTag<String> outputTag) {
         this.outputTag = outputTag;
     }
 
 
-    public void setOutputTag(OutputTag<StreamData> outputTag) {
+    public void setOutputTag(OutputTag<String> outputTag) {
         this.outputTag = outputTag;
+    }
+
+    @Override
+    public void open(Configuration parameters) throws Exception {
+        super.open(parameters);
+        mongoTemplate = AppContext.getBean(MongoTemplate.class);
     }
 
     @Override
@@ -51,7 +62,7 @@ public class DataProcess extends ProcessFunction<StreamData, StreamData> {
         String dataType = streamData.getDataType();
         log.info("data process start >>> data={}", data);
 
-        if (CReceive.extractHandlerKey.equalsIgnoreCase(dataType)) {
+        if (CReceive.dataHandlerKey.equalsIgnoreCase(dataType)) {
             ExtractInfo extractInfo = JSONObject.parseObject(data, ExtractInfo.class);
             String traceId = extractInfo.getTraceId();
             List<String> pTraceId = extractInfo.getPTraceId();
@@ -67,17 +78,17 @@ public class DataProcess extends ProcessFunction<StreamData, StreamData> {
 
             } else {// 是直接挂载的 或者是挂载到对应对象下面的，不涉及下标。
                 if (MountUtils.isNewTraceId(mount)) {
-//                    mongoTemplate.upsert(
-//                            Query.query(Criteria.where("traceId").is(traceId)),
-//                            Update.update(mountKey, result)
-//                                    .set("mountTime", new Date())
-//                                    .set("parentId", pTraceId.get(pTraceId.size() - 1)),
-//                            collectionName);
+                    mongoTemplate.upsert(
+                            Query.query(Criteria.where("traceId").is(traceId)),
+                            Update.update(mountKey, result)
+                                    .set("mountTime", new Date())
+                                    .set("parentId", pTraceId.get(pTraceId.size() - 1)),
+                            collectionName);
                 } else {
-//                    mongoTemplate.upsert(
-//                            Query.query(Criteria.where("traceId").is(traceId)),
-//                            Update.update(mountKey, result).set("mountTime", new Date()),
-//                            collectionName);
+                    mongoTemplate.upsert(
+                            Query.query(Criteria.where("traceId").is(traceId)),
+                            Update.update(mountKey, result).set("mountTime", new Date()),
+                            collectionName);
                 }
             }
         }

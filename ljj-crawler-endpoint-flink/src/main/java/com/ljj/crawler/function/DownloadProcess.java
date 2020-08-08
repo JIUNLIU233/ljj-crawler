@@ -23,17 +23,17 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class DownloadProcess extends ProcessFunction<StreamData, StreamData> {
 
-    private OutputTag<StreamData> outputTag;
+    private OutputTag<String> outputTag;
 
     public DownloadProcess() {
     }
 
-    public DownloadProcess(OutputTag<StreamData> outputTag) {
+    public DownloadProcess(OutputTag<String> outputTag) {
         this.outputTag = outputTag;
     }
 
 
-    public void setOutputTag(OutputTag<StreamData> outputTag) {
+    public void setOutputTag(OutputTag<String> outputTag) {
         this.outputTag = outputTag;
     }
 
@@ -61,7 +61,7 @@ public class DownloadProcess extends ProcessFunction<StreamData, StreamData> {
         cycleStreamData.setData(JSONObject.toJSONString(extractInfo));
         cycleStreamData.setDataType(CReceive.extractHandlerKey);
 
-        context.output(outputTag, cycleStreamData);
+        context.output(outputTag, JSONObject.toJSONString(cycleStreamData));
         log.info("download process sideOut >>> tag={},data={}", outputTag, cycleStreamData);
 
         collector.collect(streamData);

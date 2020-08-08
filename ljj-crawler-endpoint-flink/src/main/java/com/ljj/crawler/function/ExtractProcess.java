@@ -2,14 +2,17 @@ package com.ljj.crawler.function;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.ljj.crawler.common.utils.AppContext;
 import com.ljj.crawler.contant.CReceive;
 import com.ljj.crawler.core.po.ExtractInfo;
 import com.ljj.crawler.core.po.TaskInfo;
+import com.ljj.crawler.mapper.ExtractMapper;
 import com.ljj.crawler.po.StreamData;
 import com.ljj.crawler.webspider.http.Request;
 import com.ljj.crawler.webspider.selector.Selector;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
@@ -17,7 +20,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Node;
 import org.jsoup.parser.Parser;
-import org.springframework.stereotype.Component;
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -28,20 +32,28 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Create by JIUN·LIU
  * Create time 2020/8/7
  **/
-@Component
+@EnableAutoConfiguration
+@MapperScan("com.ljj.crawler.mapper")
 @Slf4j
 public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
-    private OutputTag<StreamData> outputTag;
+    private OutputTag<String> outputTag;
+    private ExtractMapper extractMapper;
 
     public ExtractProcess() {
     }
 
-    public ExtractProcess(OutputTag<StreamData> outputTag) {
+    public ExtractProcess(OutputTag<String> outputTag) {
         this.outputTag = outputTag;
     }
 
-    public void setOutputTag(OutputTag<StreamData> outputTag) {
+    public void setOutputTag(OutputTag<String> outputTag) {
         this.outputTag = outputTag;
+    }
+
+    @Override
+    public void open(Configuration parameters) throws Exception {
+        super.open(parameters);
+        extractMapper = AppContext.getBean(ExtractMapper.class);
     }
 
     @Override
@@ -52,18 +64,15 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
         List<ExtractInfo> extractInfos = null;
         String pid = null;
         if (CReceive.taskHandlerKey.equalsIgnoreCase(dataType)) {
-            //TODO 通过taskId查询跟解析
             TaskInfo taskInfo = JSONObject.parseObject(data, TaskInfo.class);
-//            extractInfos = extractMapper.findByTid(Integer.valueOf(task.getTid()));
+            extractInfos = extractMapper.findByTid(taskInfo.getId());
         } else if (CReceive.extractHandlerKey.equalsIgnoreCase(dataType)) {
             ExtractInfo extractInfo = JSONObject.parseObject(data, ExtractInfo.class);
             pid = extractInfo.getPId();
             if (pid == null || "null".equalsIgnoreCase(pid)) {
-                // TODO 通过taskId查询跟解析
-//                extractInfos = extractMapper.findByTid(Integer.valueOf(task.getTid()));
+                extractInfos = extractMapper.findByTid(Integer.valueOf(extractInfo.getTid()));
             } else {
-                // TODO 通过父解析id查询子解析
-//                extractInfos = extractMapper.findByPid(Integer.valueOf(pid));
+                extractInfos = extractMapper.findByPid(Integer.valueOf(pid));
             }
         }
 
@@ -86,7 +95,7 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                 if (mount != null && mount.contains("[new]")) {
                     //TODO 需要进行单独数据处理
                 } else {
-                    extractInfo.setTraceId(dataJson.getString("taskId"));
+                    extractInfo.setTraceId(dataJson.getString("traceId"));
                 }
 
 
@@ -132,7 +141,7 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                                 JSONObject.toJSONString(extractInfo),
                                 CReceive.dataHandlerKey
                         );
-                        ctx.output(outputTag, cycleStreamData);
+                        ctx.output(outputTag, JSONObject.toJSONString(cycleStreamData));
                         log.info("extract process sideOut >>> tag={},data={}", outputTag, cycleStreamData);
 
                     } else if (resultType == 2) { // 返回的信息是一个数组
@@ -147,7 +156,7 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                                 CReceive.dataHandlerKey
                         );
 
-                        ctx.output(outputTag, cycleStreamData);
+                        ctx.output(outputTag, JSONObject.toJSONString(cycleStreamData));
                         log.info("extract process sideOut >>> tag={},data={}", outputTag, cycleStreamData);
 
 
@@ -166,7 +175,7 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                             CReceive.downloadHandlerKey
                     );
 
-                    ctx.output(outputTag, cycleStreamData);
+                    ctx.output(outputTag, JSONObject.toJSONString(cycleStreamData));
                     log.info("extract process sideOut >>> tag={},data={}", outputTag, cycleStreamData);
 
 
@@ -178,9 +187,9 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                     StreamData cycleStreamData = new StreamData(
                             CReceive.dataHandlerKey,
                             JSONObject.toJSONString(extractInfo),
-                            CReceive.extractHandlerKey);
+                            CReceive.dataHandlerKey);
 
-                    ctx.output(outputTag, cycleStreamData);
+                    ctx.output(outputTag, JSONObject.toJSONString(cycleStreamData));
                     log.info("extract process sideOut >>> tag={},data={}", outputTag, cycleStreamData);
 
                 } else if (contentType == 5) {
@@ -190,9 +199,9 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                     StreamData cycleStreamData = new StreamData(
                             CReceive.dataHandlerKey,
                             JSONObject.toJSONString(extractInfo),
-                            CReceive.extractHandlerKey);
+                            CReceive.dataHandlerKey);
 
-                    ctx.output(outputTag, cycleStreamData);
+                    ctx.output(outputTag, JSONObject.toJSONString(cycleStreamData));
                     log.info("extract process sideOut >>> tag={},data={}", outputTag, cycleStreamData);
                 }
             }
@@ -211,9 +220,7 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
     private void handlerHtmlArray(ExtractInfo extractInfo, Context ctx) {
         Document doc = Jsoup.parse(extractInfo.getResult(), "", Parser.xmlParser());
         List<Node> nodesTmp = doc.childNodes();
-        // TODO 通过父解析id查询子解析
-//        List<ExtractInfo> childExtract = extractMapper.findByPid(extractInfo.getId());
-        List<ExtractInfo> childExtract = null;
+        List<ExtractInfo> childExtract = extractMapper.findByPid(extractInfo.getId());
         if (childExtract == null || childExtract.size() < 1) return;
         CopyOnWriteArrayList<Node> nodes = new CopyOnWriteArrayList<>();
         nodes.addAll(nodesTmp);
@@ -247,7 +254,7 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                     JSONObject.toJSONString(temp),
                     CReceive.extractHandlerKey);
 
-            ctx.output(outputTag, cycleStreamData);
+            ctx.output(outputTag, JSONObject.toJSONString(cycleStreamData));
             log.info("extract process sideOut >>> tag={},data={}", outputTag, cycleStreamData);
 
 

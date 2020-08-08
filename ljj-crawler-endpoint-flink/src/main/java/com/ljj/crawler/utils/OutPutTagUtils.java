@@ -34,8 +34,8 @@ public class OutPutTagUtils {
      * 用于将数据重新发送到kafka的tag
      * @return
      */
-    public static OutputTag<StreamData> getCycleTag() {
-        return new OutputTag<>(CReceive.cyclePushKey, TypeInformation.of(new TypeHint<StreamData>() {
+    public static OutputTag<String> getCycleTag() {
+        return new OutputTag<>(CReceive.cyclePushKey, TypeInformation.of(new TypeHint<String>() {
         }));
     }
 }

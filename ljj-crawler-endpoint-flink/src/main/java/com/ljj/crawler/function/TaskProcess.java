@@ -2,16 +2,23 @@ package com.ljj.crawler.function;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.ljj.crawler.App;
+import com.ljj.crawler.common.utils.AppContext;
 import com.ljj.crawler.common.utils.TraceUtil;
 import com.ljj.crawler.contant.CReceive;
 import com.ljj.crawler.core.po.TaskInfo;
 import com.ljj.crawler.core.po.TaskRule;
+import com.ljj.crawler.mapper.RuleMapper;
+import com.ljj.crawler.mapper.TaskMapper;
 import com.ljj.crawler.po.StreamData;
 import com.ljj.crawler.webspider.http.Request;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -24,21 +31,32 @@ import java.util.concurrent.ConcurrentHashMap;
  * Create by JIUN·LIU
  * Create time 2020/8/7
  **/
-@Component
 @Slf4j
+@EnableAutoConfiguration
+@MapperScan("com.ljj.crawler.mapper")
 public class TaskProcess extends ProcessFunction<StreamData, StreamData> {
 
-    private OutputTag<StreamData> outputTag;
+    private OutputTag<String> outputTag;
+
+    private TaskMapper taskMapper;
+    private RuleMapper ruleMapper;
 
     public TaskProcess() {
     }
 
-    public TaskProcess(OutputTag<StreamData> outputTag) {
+    public TaskProcess(OutputTag<String> outputTag) {
         this.outputTag = outputTag;
     }
 
-    public void setOutputTag(OutputTag<StreamData> outputTag) {
+    public void setOutputTag(OutputTag<String> outputTag) {
         this.outputTag = outputTag;
+    }
+
+    @Override
+    public void open(Configuration parameters) throws Exception {
+        super.open(parameters);
+        taskMapper = AppContext.getBean(TaskMapper.class);
+        ruleMapper = AppContext.getBean(RuleMapper.class);
     }
 
     @Override
@@ -46,19 +64,10 @@ public class TaskProcess extends ProcessFunction<StreamData, StreamData> {
         String data = value.getData();
         log.info("task process start >>> data={}", data);
         TaskInfo task = JSONObject.toJavaObject(JSONObject.parseObject(data), TaskInfo.class);
-        TaskInfo taskInfo = new TaskInfo();
 
-        taskInfo.setId(1);
-        taskInfo.setName("测试使用");
-        taskInfo.setStartUrl("http://www.xbiquge.la/0/951/");
-        taskInfo.setComment("测试flink流");
-
-        // TODO  从 配置中心查询任务配置信息
-//        TaskInfo taskInfo = taskMapper.findById(Integer.valueOf(task.getTid()));
+        TaskInfo taskInfo = taskMapper.findById(Integer.valueOf(task.getTid()));
         //2、对task Info做出相对必要的校验信息
-        // TODO 从配置中心查询任务规则配置信息
-//        List<TaskRule> rules = ruleMapper.findByTid(Integer.valueOf(taskInfo.getTid()));
-        List<TaskRule> rules = null;
+        List<TaskRule> rules = ruleMapper.findByTid(Integer.valueOf(taskInfo.getTid()));
         String startUrl1 = taskInfo.getStartUrl();
         if (rules == null || rules.size() < 1) { // 链接没有规则信息
             log.info("task process don`t have rule >>>");
@@ -72,7 +81,7 @@ public class TaskProcess extends ProcessFunction<StreamData, StreamData> {
                     setData(JSONObject.toJSONString(taskInfo));
                     setDataType(CReceive.taskHandlerKey);
                 }};
-                ctx.output(outputTag, cycleStreamData);
+                ctx.output(outputTag, JSONObject.toJSONString(cycleStreamData));
                 log.info("task process sideOut >>> tag={},data={}", outputTag, cycleStreamData);
 
             } else {
@@ -163,7 +172,7 @@ public class TaskProcess extends ProcessFunction<StreamData, StreamData> {
             setData(JSONObject.toJSONString(request));
             setDataType(CReceive.downloadHandlerKey);
         }};
-        ctx.output(outputTag, streamData);
+        ctx.output(outputTag, JSONObject.toJSONString(streamData));
         log.info("task process sideOut >>> tag={},data={}", outputTag, streamData);
     }
 }

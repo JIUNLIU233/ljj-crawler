@@ -1,4 +1,4 @@
-package com.ljj.crawler.deserialization;
+package com.ljj.crawler.serialization;
 
 import com.alibaba.fastjson.JSONObject;
 import com.ljj.crawler.po.StreamData;

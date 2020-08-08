@@ -30,10 +30,6 @@ public class SourceDisProcess extends ProcessFunction<StreamData, StreamData> {
         this.srt = srt;
     }
 
-    public Map<String, OutputTag<StreamData>> getSrt() {
-        return srt;
-    }
-
     public void setSrt(Map<String, OutputTag<StreamData>> srt) {
         this.srt = srt;
     }

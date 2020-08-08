@@ -1,4 +1,4 @@
-package com.ljj.crawler.extract.selector;
+package com.ljj.crawler.webspider.selector;
 
 import com.ljj.crawler.core.po.ExtractInfo;
 import org.jsoup.Jsoup;

@@ -6,7 +6,7 @@ import com.ljj.crawler.core.po.TaskInfo;
 import com.ljj.crawler.core.Task;
 import com.ljj.crawler.core.handler.AbstractHandler;
 import com.ljj.crawler.core.scheduler.Scheduler;
-import com.ljj.crawler.extract.selector.Selector;
+import com.ljj.crawler.webspider.selector.Selector;
 import com.ljj.crawler.mapper.ExtractMapper;
 import com.ljj.crawler.webspider.http.Request;
 import lombok.extern.slf4j.Slf4j;

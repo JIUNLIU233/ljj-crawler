@@ -37,10 +37,6 @@ public class TaskProcess extends ProcessFunction<StreamData, StreamData> {
         this.outputTag = outputTag;
     }
 
-    public OutputTag<StreamData> getOutputTag() {
-        return outputTag;
-    }
-
     public void setOutputTag(OutputTag<StreamData> outputTag) {
         this.outputTag = outputTag;
     }
@@ -57,8 +53,10 @@ public class TaskProcess extends ProcessFunction<StreamData, StreamData> {
         taskInfo.setStartUrl("http://www.xbiquge.la/0/951/");
         taskInfo.setComment("测试flink流");
 
+        // TODO  从 配置中心查询任务配置信息
 //        TaskInfo taskInfo = taskMapper.findById(Integer.valueOf(task.getTid()));
         //2、对task Info做出相对必要的校验信息
+        // TODO 从配置中心查询任务规则配置信息
 //        List<TaskRule> rules = ruleMapper.findByTid(Integer.valueOf(taskInfo.getTid()));
         List<TaskRule> rules = null;
         String startUrl1 = taskInfo.getStartUrl();
@@ -69,19 +67,18 @@ public class TaskProcess extends ProcessFunction<StreamData, StreamData> {
                 // 为空的时候，证明不需要进行对应的request生成，只需要进行下一步即可。
                 log.info("task process pushExtract >>> extract={}", JSON.toJSONString(taskInfo));
 
-                ctx.output(outputTag, new StreamData() {{
+                StreamData cycleStreamData = new StreamData() {{
                     setReceive(CReceive.extractHandlerKey);
                     setData(JSONObject.toJSONString(taskInfo));
                     setDataType(CReceive.taskHandlerKey);
-                }});
+                }};
+                ctx.output(outputTag, cycleStreamData);
+                log.info("task process sideOut >>> tag={},data={}", outputTag, cycleStreamData);
 
-//                scheduler.pushExtract(taskInfo);
             } else {
                 Request request = Request.create(taskInfo);
                 log.info("task process pushRequest >>> request={}", JSON.toJSONString(request));
-
                 outDownLoad(ctx, request);
-//                scheduler.pushRequest(request);
             }
         } else { // 链接有规则信息，有规则信息，则必然存在startUrl。要不然规则无处安放。
             for (TaskRule rule : rules) {
@@ -99,7 +96,6 @@ public class TaskProcess extends ProcessFunction<StreamData, StreamData> {
                             t.setTraceId(TraceUtil.traceId());
                             Request request = Request.create(t);
                             log.info("task process pushRequest >>> request={}", JSON.toJSONString(request));
-//                            scheduler.pushRequest(request);
                             outDownLoad(ctx, request);
                         });
                     } else {
@@ -107,7 +103,6 @@ public class TaskProcess extends ProcessFunction<StreamData, StreamData> {
                             t.setTraceId(TraceUtil.traceId());
                             Request request = Request.create(t);
                             log.info("task process pushRequest >>> request={}", JSON.toJSONString(request));
-//                            scheduler.pushRequest(request);
                             outDownLoad(ctx, request);
                         });
                     }
@@ -115,6 +110,7 @@ public class TaskProcess extends ProcessFunction<StreamData, StreamData> {
             }
 
         }
+        out.collect(value); // 主流不断
     }
 
     /**

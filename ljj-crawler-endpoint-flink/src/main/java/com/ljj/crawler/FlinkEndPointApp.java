@@ -2,9 +2,9 @@ package com.ljj.crawler;
 
 
 import com.ljj.crawler.contant.CReceive;
-import com.ljj.crawler.serialization.KafkaStreamDataDes;
 import com.ljj.crawler.function.*;
 import com.ljj.crawler.po.StreamData;
+import com.ljj.crawler.serialization.KafkaStreamDataDes;
 import com.ljj.crawler.utils.OutPutTagUtils;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.streaming.api.CheckpointingMode;
@@ -101,7 +101,6 @@ public class FlinkEndPointApp {
     }
 
     public void dealCycleData(DataStream<String> cycleStreamSideOutput) {
-        //TODO 重新把cycle中的数据发送到kafka中
         Properties producerProps = new Properties();
         producerProps.setProperty("bootstrap.servers", "fjr-yz-204-15:9092,fjr-yz-0-134:9092,fjr-yz-0-135:9092");
         producerProps.setProperty("enable.auto.commit", "true");
@@ -109,6 +108,7 @@ public class FlinkEndPointApp {
         producerProps.setProperty("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         producerProps.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 
+        // TODO 设置消息处理状态为 已经发送到kafka中。
         cycleStreamSideOutput.addSink(new FlinkKafkaProducer<String>(endpointTopic, new SimpleStringSchema(), producerProps));
 
     }

@@ -41,6 +41,7 @@ public class DownloadProcess extends ProcessFunction<StreamData, StreamData> {
     public void processElement(StreamData streamData, Context context, Collector<StreamData> collector) throws Exception {
         String data = streamData.getData();
         log.info("download process start >>> data={}", data);
+        // TODO 接收到消息，设置消息状态为正在处理
         Request request = JSONObject.parseObject(streamData.getData(), Request.class);
         Response execute = WRequest.create(request).execute();
 
@@ -56,6 +57,8 @@ public class DownloadProcess extends ProcessFunction<StreamData, StreamData> {
         extractInfo.setResult(execute.getResponseBody());
         extractInfo.setResultBytes(execute.getResponseBytes());
 
+        // TODO 消息处理完成，设置该条消息为处理完成状态
+        // 下面为新的消息，设置其状态到其对应的 push 环节设置即可。
         StreamData cycleStreamData = new StreamData();
         cycleStreamData.setReceive(CReceive.extractHandlerKey);
         cycleStreamData.setData(JSONObject.toJSONString(extractInfo));

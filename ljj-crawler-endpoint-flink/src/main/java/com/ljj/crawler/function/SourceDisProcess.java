@@ -2,14 +2,11 @@ package com.ljj.crawler.function;
 
 import com.ljj.crawler.po.StreamData;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Component;
 
-import javax.xml.transform.Source;
 import java.util.Map;
 
 /**

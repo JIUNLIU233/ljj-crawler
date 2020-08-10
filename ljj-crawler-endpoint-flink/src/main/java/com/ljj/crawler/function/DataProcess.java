@@ -11,14 +11,11 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
-import org.mybatis.spring.annotation.MapperScan;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.List;
@@ -62,6 +59,7 @@ public class DataProcess extends ProcessFunction<StreamData, StreamData> {
         String dataType = streamData.getDataType();
         log.info("data process start >>> data={}", data);
 
+        //TODO 设置消息状态为正在处理
         if (CReceive.dataHandlerKey.equalsIgnoreCase(dataType)) {
             ExtractInfo extractInfo = JSONObject.parseObject(data, ExtractInfo.class);
             String traceId = extractInfo.getTraceId();
@@ -93,6 +91,7 @@ public class DataProcess extends ProcessFunction<StreamData, StreamData> {
             }
         }
 
+        // TODO 设置消息为处理完成
         collector.collect(streamData);
     }
 }

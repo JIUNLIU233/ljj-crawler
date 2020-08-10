@@ -2,7 +2,6 @@ package com.ljj.crawler.function;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.ljj.crawler.App;
 import com.ljj.crawler.common.utils.AppContext;
 import com.ljj.crawler.common.utils.TraceUtil;
 import com.ljj.crawler.contant.CReceive;
@@ -19,7 +18,6 @@ import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,6 +61,10 @@ public class TaskProcess extends ProcessFunction<StreamData, StreamData> {
     public void processElement(StreamData value, Context ctx, Collector<StreamData> out) throws Exception {
         String data = value.getData();
         log.info("task process start >>> data={}", data);
+
+
+        // TODO 更行任务状态为 执行ing状态。
+
         TaskInfo task = JSONObject.toJavaObject(JSONObject.parseObject(data), TaskInfo.class);
 
         TaskInfo taskInfo = taskMapper.findById(Integer.valueOf(task.getTid()));

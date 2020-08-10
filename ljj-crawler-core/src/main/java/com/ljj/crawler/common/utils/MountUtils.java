@@ -18,7 +18,7 @@ public class MountUtils {
      * @return
      */
     public static boolean isNewTraceId(String mount) {
-        if (mount != null && (mount.startsWith("[new]") || mount.contains("[array]"))) return true;
+        if (mount != null && (mount.contains("[new]") || mount.contains("[array]"))) return true;
         return false;
     }
 

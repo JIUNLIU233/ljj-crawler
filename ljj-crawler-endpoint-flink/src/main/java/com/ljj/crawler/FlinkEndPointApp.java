@@ -55,7 +55,7 @@ public class FlinkEndPointApp {
          */
         Properties consumerProps = new Properties();
         consumerProps.setProperty("bootstrap.servers", "fjr-yz-204-15:9092,fjr-yz-0-134:9092,fjr-yz-0-135:9092");
-        consumerProps.setProperty("group.id", "idea-test1");
+        consumerProps.setProperty("group.id", "idea-test2");
         consumerProps.setProperty("enable.auto.commit", "true");
         consumerProps.setProperty("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         consumerProps.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");

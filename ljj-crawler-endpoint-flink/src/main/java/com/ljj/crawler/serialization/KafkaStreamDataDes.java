@@ -28,7 +28,8 @@ public class KafkaStreamDataDes implements KafkaDeserializationSchema<StreamData
     @Override
     public StreamData deserialize(ConsumerRecord<byte[], byte[]> consumerRecord) throws Exception {
         try {
-            StreamData streamData = JSONObject.parseObject(new String(consumerRecord.value()), StreamData.class);
+            String text = new String(consumerRecord.value());
+            StreamData streamData = JSONObject.parseObject(text, StreamData.class);
             return streamData;
         } catch (Exception e) {
             log.error("des streamData error >>> e:", e);

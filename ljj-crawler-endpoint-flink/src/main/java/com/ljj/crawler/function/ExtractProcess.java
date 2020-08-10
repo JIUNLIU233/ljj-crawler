@@ -3,6 +3,7 @@ package com.ljj.crawler.function;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.ljj.crawler.common.utils.AppContext;
+import com.ljj.crawler.common.utils.TraceUtil;
 import com.ljj.crawler.contant.CReceive;
 import com.ljj.crawler.core.po.ExtractInfo;
 import com.ljj.crawler.core.po.TaskInfo;
@@ -80,7 +81,9 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
 
             if (extractInfos == null || extractInfos.size() < 1) {
                 log.info("extract handler end >>> msg=don`t have extracts");
+                //TODO 数据已经处理完毕
             } else {
+                String traceIdTemp = TraceUtil.traceId();
                 for (ExtractInfo extractInfo : extractInfos) {
                     // 上个节点的result是当前节点的content
                     if (CReceive.extractHandlerKey.equalsIgnoreCase(dataType)) {
@@ -95,7 +98,13 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                     // 数据挂载的处理
                     String mount = extractInfo.getMount();
                     if (mount != null && mount.contains("[new]")) {
-                        //TODO 需要进行单独数据处理
+                        //TODO 需要进行 同一个子排列下面的traceId 是一样的。最好的办法就是给父节点设置newTraceId。
+                        String traceId = dataJson.getString("traceId");
+                        extractInfo.setTraceId(traceIdTemp);
+                        List<String> pTraceId = extractInfo.getPTraceId();
+                        if (pTraceId.size() < 1 || pTraceId.get(pTraceId.size() - 1) != traceId) {
+                            pTraceId.add(traceId);
+                        }
                     } else {
                         extractInfo.setTraceId(dataJson.getString("traceId"));
                     }
@@ -137,7 +146,7 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                             }
                             extractInfo.setResult(result);
                             log.info("extract handler end >>> push to data result={}", JSON.toJSONString(extractInfo));
-
+                            extractInfo.setContentBytes(null);
                             StreamData cycleStreamData = new StreamData(
                                     CReceive.dataHandlerKey,
                                     JSONObject.toJSONString(extractInfo),
@@ -153,6 +162,7 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                         } else {
                             extractInfo.setResult(selectResult);
                             log.info("extract handler end >>> push to extract result={}", JSON.toJSONString(extractInfo));
+                            extractInfo.setContentBytes(null);
                             StreamData cycleStreamData = new StreamData(
                                     CReceive.dataHandlerKey,
                                     JSONObject.toJSONString(extractInfo),
@@ -187,7 +197,7 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                         // 静态数据
                         extractInfo.setResult(extractInfo.getContent());
                         log.info("extract handler end >>> contentType=static, result={}", JSON.toJSONString(extractInfo));
-
+                        extractInfo.setContentBytes(null);
                         StreamData cycleStreamData = new StreamData(
                                 CReceive.dataHandlerKey,
                                 JSONObject.toJSONString(extractInfo),
@@ -201,6 +211,7 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                         String base64 = Selector.base64Selector().select(extractInfo.getContentBytes(), extractInfo);
                         extractInfo.setResult(base64);
                         log.info("extract handler end >>> contentType=base64, result={}", JSON.toJSONString(extractInfo));
+                        extractInfo.setContentBytes(null);
                         StreamData cycleStreamData = new StreamData(
                                 CReceive.dataHandlerKey,
                                 JSONObject.toJSONString(extractInfo),
@@ -257,13 +268,16 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
             temp.setResult(content);
             temp.setResultBytes(content.getBytes());
             temp.setPid(extractInfo.getId());
+            // 避免无用数据流转，占用资源
+            temp.setContent(null);
+            temp.setContentBytes(null);
 
             StreamData cycleStreamData = new StreamData(
                     CReceive.extractHandlerKey,
                     JSONObject.toJSONString(temp),
                     CReceive.extractHandlerKey);
 
-            outSide(ctx,JSONObject.toJSONString(cycleStreamData));
+            outSide(ctx, JSONObject.toJSONString(cycleStreamData));
             log.info("extract process sideOut >>> tag={},data={}", outputTag, cycleStreamData);
 
 
@@ -273,6 +287,6 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
 
     private void outSide(Context ctx, String data) {
         // TODO 更新消息状态为处理完毕
-        ctx.output(outputTag, JSONObject.toJSONString(data));
+        ctx.output(outputTag, data);
     }
 }

@@ -280,7 +280,6 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
             start = Integer.valueOf(split[0]);
             endSub = Integer.valueOf(split[1]);
         }
-        endSub = nodes.size() - 1;
 
         for (; start < nodes.size() - endSub; start++) {
             // 生成多个extract 父节点信息

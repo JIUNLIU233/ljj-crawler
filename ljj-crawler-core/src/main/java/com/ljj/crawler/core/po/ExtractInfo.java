@@ -22,23 +22,33 @@ import java.util.List;
 @AllArgsConstructor
 @Slf4j
 public class ExtractInfo implements Task, Cloneable {
+    /**
+     * 以下为用于流程跟踪的属性
+     */
     private Integer id;         // 主键id
     private Integer tid;        // 任务id
     private Integer pid;        // 父解析的主键id
     private String traceId;     // 流程id
     private List<String> pTraceId = new ArrayList<>();// 父流程id信息
+
+    /**
+     * 以下为用于解析的属性
+     */
+
     private String content;     // 本次解析需要解析的内容
     private byte[] contentBytes;// 本次解析的二进制内容
     // 本次解析内容的类型 1：html，2：json,3:link,4:static,5:base64图片信息
     private Integer contentType;
     private String selector;    // 本次解析的参数信息
     private String selectorAttr;// 解析html中的属性参数
-    private Integer resultType;  // 本次解析结果的类型 1：string，2：array
+    private Integer resultType;  // 本次解析结果的类型 1：string，2：array ， 3：link
     private String result;      // 本次解析的结果
     private byte[] resultBytes; // 本次解析内容的字节数组
     private String mount;      // 本次解析结果的数据存储挂载点
     private String arrayRange; // 数组的选择范围
 
+
+    private String curUrl;    // 本次解析对应的页面的链接。
 
     public static ExtractInfo create(Task task) {
         ExtractInfo extractInfo = new ExtractInfo();

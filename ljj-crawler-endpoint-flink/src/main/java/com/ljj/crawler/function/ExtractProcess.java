@@ -3,8 +3,10 @@ package com.ljj.crawler.function;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.ljj.crawler.common.utils.AppContext;
+import com.ljj.crawler.common.utils.MountUtils;
 import com.ljj.crawler.common.utils.TraceUtil;
 import com.ljj.crawler.contant.CReceive;
+import com.ljj.crawler.core.Task;
 import com.ljj.crawler.core.po.ExtractInfo;
 import com.ljj.crawler.core.po.TaskInfo;
 import com.ljj.crawler.mapper.ExtractMapper;
@@ -24,6 +26,8 @@ import org.jsoup.parser.Parser;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -62,6 +66,7 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
         String data = value.getData();
         log.info("extract process start >>> data={}", data);
         // TODO 收到消息，设置其为处理状态
+
         try {
             String dataType = value.getDataType();
             List<ExtractInfo> extractInfos = null;
@@ -99,11 +104,15 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                     String mount = extractInfo.getMount();
                     if (mount != null && mount.contains("[new]")) {
                         //TODO 需要进行 同一个子排列下面的traceId 是一样的。最好的办法就是给父节点设置newTraceId。
-                        String traceId = dataJson.getString("traceId");
-                        extractInfo.setTraceId(traceIdTemp);
-                        List<String> pTraceId = extractInfo.getPTraceId();
-                        if (pTraceId.size() < 1 || pTraceId.get(pTraceId.size() - 1) != traceId) {
-                            pTraceId.add(traceId);
+                        if (mount.startsWith("[new]")) {
+
+                        } else {
+                            String traceId = dataJson.getString("traceId");
+                            extractInfo.setTraceId(traceIdTemp);
+                            List<String> pTraceId = extractInfo.getPTraceId();
+                            if (pTraceId.size() < 1 || pTraceId.get(pTraceId.size() - 1) != traceId) {
+                                pTraceId.add(traceId);
+                            }
                         }
                     } else {
                         extractInfo.setTraceId(dataJson.getString("traceId"));
@@ -112,6 +121,9 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
 
                     String content = extractInfo.getContent();
                     Integer contentType = extractInfo.getContentType();
+                    /**
+                     * 这个分支下，为对应的html 返回内容的处理
+                     */
                     if (contentType == null || contentType == 0 || contentType == 1) {
                         String selector = extractInfo.getSelector();
                         log.info("extract handler >>> contentType=html, selector={}, content={}", selector, content);
@@ -159,6 +171,9 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                         } else if (resultType == 2) { // 返回的信息是一个数组
                             extractInfo.setResult(selectResult);
                             handlerHtmlArray(extractInfo, ctx);
+                        } else if (resultType == 3) { // 解析的结果为一个链接
+                            extractInfo.setResult(selectResult);
+                            handlerLink(extractInfo, ctx);
                         } else {
                             extractInfo.setResult(selectResult);
                             log.info("extract handler end >>> push to extract result={}", JSON.toJSONString(extractInfo));
@@ -285,8 +300,64 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
     }
 
 
+    private void handlerLink(ExtractInfo extractInfo, Context ctx) {
+        String curUrl = extractInfo.getCurUrl();
+        String linkUrl = extractInfo.getResult();
+        if (StringUtils.isNotEmpty(linkUrl)) {
+            Request request = Request.create(extractInfo);
+            if (linkUrl.startsWith("http")) { // 是一个完整链接
+                request.setUrl(linkUrl);
+            } else {    // 不是一个完整的http 链接。
+                /*
+                 * 可能存在的情况：
+                 *      www.baidu.com/xxx   这个现需要添加协议
+                 *      //www.baidu.com/xxx 这个现需要处理协议和分隔符
+                 *      baidu.com/xxx       这个需要处理其前缀
+                 *      /xxx/xxx/xxx        这个需要补充host和协议
+                 *      xxx/xxx/xxx         这个需要补充host、协议、以及对应的分隔符
+                 */
+                try {
+                    URL url = new URL(curUrl);
+                    String host = url.getHost();
+                    String protocol = url.getProtocol();
+
+                    String newUrl;
+                    if (linkUrl.contains(host)) {
+                        int i = linkUrl.indexOf(host) + host.length();
+                        String substring = linkUrl.substring(i);
+                        newUrl = protocol + "://" + host + substring;
+                    } else {
+                        if (linkUrl.startsWith("/")) {
+                            newUrl = protocol + "://" + host + linkUrl;
+                        } else {
+                            newUrl = protocol + "://" + host + "/" + linkUrl;
+                        }
+                    }
+
+                    request.setUrl(newUrl);
+
+                } catch (MalformedURLException e) { // 正常情况下，这里不会出问题。
+                    e.printStackTrace();
+                    log.error("handlerLink error >>> pass curUrl to URL error:", e);
+                }
+
+
+            }
+            if (StringUtils.isNotEmpty(request.getUrl()))
+                outSide(ctx, CReceive.downloadHandlerKey, request, CReceive.downloadHandlerKey);
+        }
+    }
+
     private void outSide(Context ctx, String data) {
         // TODO 更新消息状态为处理完毕
         ctx.output(outputTag, data);
+    }
+
+    private void outSide(Context ctx, String receive, Task data, String dataType) {
+        StreamData cycleStreamData = new StreamData(
+                receive,
+                JSONObject.toJSONString(data),
+                dataType);
+        ctx.output(outputTag, JSONObject.toJSONString(cycleStreamData));
     }
 }

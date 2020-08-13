@@ -1,5 +1,7 @@
 package com.ljj.crawler.common.utils;
 
+import com.ljj.crawler.core.po.ExtractInfo;
+
 /**
  * 数据挂载的工具类
  * Create by JIUN·LIU
@@ -14,11 +16,15 @@ public class MountUtils {
      * 一条单独的新数据需要new traceId。
      * 对象的数组子节点也需要new traceId。
      *
-     * @param mount
+     * @param extractInfo
      * @return
      */
-    public static boolean isNewTraceId(String mount) {
-        if (mount != null && (mount.contains("[new]") || mount.contains("[array]"))) return true;
+    public static boolean isNewTraceId(ExtractInfo extractInfo) {
+        String mount = extractInfo.getMount();
+        if (mount != null
+                && ((mount.contains("[new]") || mount.contains("[array]"))
+                || extractInfo.getPTraceId().size() > 0)
+        ) return true;
         return false;
     }
 
@@ -30,7 +36,8 @@ public class MountUtils {
      */
     public static String getCollectionName(String mount) {
         if (mount == null) return null;
-        return mount.split("\\.")[0];
+        String s = mount.split("\\.")[0];
+        return s.replace("[new]", "");
     }
 
 

@@ -13,6 +13,8 @@ import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
 import org.springframework.stereotype.Component;
 
+import java.net.URL;
+
 /**
  * 功能：
  *
@@ -53,9 +55,15 @@ public class DownloadProcess extends ProcessFunction<StreamData, StreamData> {
          *
          * 2、通过 extract_info 解析过程中生成
          */
+
         ExtractInfo extractInfo = ExtractInfo.create(request);
         extractInfo.setResult(execute.getResponseBody());
         extractInfo.setResultBytes(execute.getResponseBytes());
+
+        URL currentURL = execute.getCurrentURL();
+        if (currentURL != null) {
+            extractInfo.setCurUrl(currentURL.toString());
+        }
 
         // TODO 消息处理完成，设置该条消息为处理完成状态
         // 下面为新的消息，设置其状态到其对应的 push 环节设置即可。

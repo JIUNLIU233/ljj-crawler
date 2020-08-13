@@ -73,8 +73,7 @@ public class DataProcess extends ProcessFunction<StreamData, StreamData> {
 
 
             // 是直接挂载的 或者是挂载到对应对象下面的，不涉及下标。
-            if (MountUtils.isNewTraceId(mount)) {
-                collectionName = collectionName.replace("[new]", "");
+            if (MountUtils.isNewTraceId(extractInfo)) {
                 mongoTemplate.upsert(
                         Query.query(Criteria.where("traceId").is(traceId)),
                         Update.update(mountKey, result)

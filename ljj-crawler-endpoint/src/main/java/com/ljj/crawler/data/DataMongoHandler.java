@@ -44,25 +44,20 @@ public class DataMongoHandler implements AbstractHandler {
             String mountKey = MountUtils.getMountKey(mount);
             String collectionName = MountUtils.getCollectionName(mount);
 
-            if (MountUtils.isArrayMount(mount)) { // 如果是挂载数据的数组子节点中，需要判断数组中的对象的traceId和当前节点的traceId相同。或者干脆不支持数组，
-                // 涉及到数组的全部挂载到其他集合中。
-
-            } else {// 是直接挂载的 或者是挂载到对应对象下面的，不涉及下标。
-                if (MountUtils.isNewTraceId(mount)) {
-                    mongoTemplate.upsert(
-                            Query.query(Criteria.where("traceId").is(traceId)),
-                            Update.update(mountKey, result)
-                                    .set("mountTime", new Date())
-                                    .set("parentId", pTraceId.get(pTraceId.size() - 1)),
-                            collectionName);
-                } else {
-                    mongoTemplate.upsert(
-                            Query.query(Criteria.where("traceId").is(traceId)),
-                            Update.update(mountKey, result).set("mountTime", new Date()),
-                            collectionName);
-                }
+            // 是直接挂载的 或者是挂载到对应对象下面的，不涉及下标。
+            if (MountUtils.isNewTraceId((ExtractInfo) task)) {
+                mongoTemplate.upsert(
+                        Query.query(Criteria.where("traceId").is(traceId)),
+                        Update.update(mountKey, result)
+                                .set("mountTime", new Date())
+                                .set("parentId", pTraceId.get(pTraceId.size() - 1)),
+                        collectionName);
+            } else {
+                mongoTemplate.upsert(
+                        Query.query(Criteria.where("traceId").is(traceId)),
+                        Update.update(mountKey, result).set("mountTime", new Date()),
+                        collectionName);
             }
-
         }
     }
 }

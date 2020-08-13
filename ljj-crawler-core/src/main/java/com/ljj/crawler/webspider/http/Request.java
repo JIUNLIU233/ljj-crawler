@@ -70,8 +70,10 @@ public class Request implements Task {
         request.parentTraceId = task.getPTraceId();
         if (task instanceof TaskInfo)
             request.url = ((TaskInfo) task).getStartUrl();
-        if (task instanceof ExtractInfo)
+        if (task instanceof ExtractInfo) {
             request.url = ((ExtractInfo) task).getContent();
+            request.setParentId(((ExtractInfo) task).getId() + "");
+        }
         return request;
     }
 

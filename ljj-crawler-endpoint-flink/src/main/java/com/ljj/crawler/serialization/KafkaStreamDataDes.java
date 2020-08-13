@@ -29,6 +29,7 @@ public class KafkaStreamDataDes implements KafkaDeserializationSchema<StreamData
     public StreamData deserialize(ConsumerRecord<byte[], byte[]> consumerRecord) throws Exception {
         try {
             String text = new String(consumerRecord.value());
+            log.info("offset={},value={}", consumerRecord.offset(), "");
             StreamData streamData = JSONObject.parseObject(text, StreamData.class);
             return streamData;
         } catch (Exception e) {

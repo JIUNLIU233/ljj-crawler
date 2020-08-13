@@ -67,6 +67,7 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
         log.info("extract process start >>> data={}", data);
         // TODO 收到消息，设置其为处理状态
 
+        List<String> sourcePTraceId = null;
         try {
             String dataType = value.getDataType();
             List<ExtractInfo> extractInfos = null;
@@ -76,6 +77,7 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                 extractInfos = extractMapper.findByTid(taskInfo.getId());
             } else if (CReceive.extractHandlerKey.equalsIgnoreCase(dataType)) {
                 ExtractInfo extractInfo = JSONObject.parseObject(data, ExtractInfo.class);
+                sourcePTraceId = extractInfo.getPTraceId();
                 pid = extractInfo.getPId();
                 if (pid == null || "null".equalsIgnoreCase(pid)) {
                     extractInfos = extractMapper.findByTid(Integer.valueOf(extractInfo.getTid()));
@@ -89,6 +91,7 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                 //TODO 数据已经处理完毕
             } else {
                 String traceIdTemp = TraceUtil.traceId();
+                boolean newTraceFlag = false;
                 for (ExtractInfo extractInfo : extractInfos) {
                     // 上个节点的result是当前节点的content
                     if (CReceive.extractHandlerKey.equalsIgnoreCase(dataType)) {
@@ -96,26 +99,31 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
 
                         extractInfo.setContent(sourceExtract.getResult());
                         extractInfo.setContentBytes(sourceExtract.getResultBytes());
+                        extractInfo.setCurUrl(sourceExtract.getCurUrl());
                     }
 
                     JSONObject dataJson = JSONObject.parseObject(data);
 
                     // 数据挂载的处理
                     String mount = extractInfo.getMount();
-                    if (mount != null && mount.contains("[new]")) {
+                    if (newTraceFlag || (mount != null && mount.contains("[new]"))) {
                         //TODO 需要进行 同一个子排列下面的traceId 是一样的。最好的办法就是给父节点设置newTraceId。
-                        if (mount.startsWith("[new]")) {
 
-                        } else {
-                            String traceId = dataJson.getString("traceId");
-                            extractInfo.setTraceId(traceIdTemp);
-                            List<String> pTraceId = extractInfo.getPTraceId();
-                            if (pTraceId.size() < 1 || pTraceId.get(pTraceId.size() - 1) != traceId) {
-                                pTraceId.add(traceId);
-                            }
+                        String traceId = dataJson.getString("traceId");
+                        extractInfo.setTraceId(traceIdTemp);
+                        List<String> pTraceId = extractInfo.getPTraceId();
+                        if (pTraceId.size() < 1 || !pTraceId.get(pTraceId.size() - 1).equalsIgnoreCase(traceId)) {
+                            pTraceId.add(traceId);
                         }
+                        if (sourcePTraceId.size() < 1 || !sourcePTraceId.get(sourcePTraceId.size() - 1).equalsIgnoreCase(traceId)) {
+                            sourcePTraceId.add(traceId);
+                        }
+
+                        newTraceFlag = true;
+
                     } else {
                         extractInfo.setTraceId(dataJson.getString("traceId"));
+                        extractInfo.setPTraceId(sourcePTraceId);
                     }
 
 
@@ -132,9 +140,8 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                         String selectResult = null;
                         if (CReceive.extractHandlerKey.equalsIgnoreCase(dataType)) {
                             ExtractInfo sourceExtract = JSONObject.parseObject(data, ExtractInfo.class);
-
                             Integer ct = sourceExtract.getContentType();
-                            if (selector == null || StringUtils.isEmpty(selector)) {
+                            if (StringUtils.isEmpty(selector)) {
                                 selectResult = extractInfo.getContent();
                             } else if (ct == null || ct != 1) {
                                 selectResult = Selector.cssSelector().select(extractInfo.getContent().getBytes(), extractInfo);
@@ -144,19 +151,21 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                         }
                         log.info("extract handler >>> contentType=html ,selectResult={}", selectResult);
 
+
                         Integer resultType = extractInfo.getResultType();
                         if (selectResult == null) {
                             log.info("extract handler end >>> select result == null");
                         } else if ((resultType == null || resultType == 1) && selectResult != null) {
-                            Document document = Jsoup.parse(selectResult, "", Parser.xmlParser());
-                            String result;
-                            String selectorAttr = extractInfo.getSelectorAttr();
-                            if (selectorAttr == null || StringUtils.isEmpty(selectorAttr)) {
-                                result = document.text();
+                            /**
+                             * 此分支为 提取element中的text
+                             */
+
+                            if (StringUtils.isEmpty(extractInfo.getSelectorAttr())) {
+                                Document document = Jsoup.parse(selectResult, "", Parser.xmlParser());
+                                extractInfo.setResult(document.text());
                             } else {
-                                result = document.children().attr(selectorAttr);
+                                extractInfo.setResult(selectResult);
                             }
-                            extractInfo.setResult(result);
                             log.info("extract handler end >>> push to data result={}", JSON.toJSONString(extractInfo));
                             extractInfo.setContentBytes(null);
                             StreamData cycleStreamData = new StreamData(
@@ -271,6 +280,8 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
             start = Integer.valueOf(split[0]);
             endSub = Integer.valueOf(split[1]);
         }
+        endSub = nodes.size() - 1;
+
         for (; start < nodes.size() - endSub; start++) {
             // 生成多个extract 父节点信息
             String content = nodes.get(start).outerHtml();

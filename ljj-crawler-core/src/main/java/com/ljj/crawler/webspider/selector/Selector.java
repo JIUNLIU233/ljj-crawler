@@ -1,9 +1,11 @@
 package com.ljj.crawler.webspider.selector;
 
 import com.ljj.crawler.core.po.ExtractInfo;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
+import org.jsoup.select.Elements;
 
 import java.util.Base64;
 
@@ -18,7 +20,10 @@ public interface Selector {
     static Selector cssSelector() {
         return (content, extractInfo) -> {
             Document document = Jsoup.parse(new String(content));
-            return document.select(extractInfo.getSelector()).outerHtml();
+            Elements select = document.select(extractInfo.getSelector());
+            String selectorAttr = extractInfo.getSelectorAttr();
+            if (StringUtils.isEmpty(selectorAttr)) return select.outerHtml();
+            else return select.attr(selectorAttr);
         };
     }
 

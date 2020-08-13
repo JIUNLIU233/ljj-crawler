@@ -64,7 +64,7 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
     @Override
     public void processElement(StreamData value, Context ctx, Collector<StreamData> out) throws Exception {
         String data = value.getData();
-        log.info("extract process start >>> data={}", data);
+        log.info("extract process start >>> offset={}", value.getOffset());
         // TODO 收到消息，设置其为处理状态
 
         List<String> sourcePTraceId = null;
@@ -87,7 +87,7 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
             }
 
             if (extractInfos == null || extractInfos.size() < 1) {
-                log.info("extract handler end >>> msg=don`t have extracts");
+                log.info("extract handler end >>> offset={}, msg=don`t have extracts", value.getOffset());
                 //TODO 数据已经处理完毕
             } else {
                 String traceIdTemp = TraceUtil.traceId();
@@ -127,14 +127,15 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                     }
 
 
-                    String content = extractInfo.getContent();
                     Integer contentType = extractInfo.getContentType();
+
                     /**
                      * 这个分支下，为对应的html 返回内容的处理
                      */
                     if (contentType == null || contentType == 0 || contentType == 1) {
                         String selector = extractInfo.getSelector();
-                        log.info("extract handler >>> contentType=html, selector={}, content={}", selector, content);
+                        String selectorAttr = extractInfo.getSelectorAttr();
+                        log.info("extract handler >>> offset={} , contentType=html, selector={} , selectorAttr={}", value.getOffset(), selector, selectorAttr);
                         // 默认html
                         // 如果传入的解析（即父解析）的contentType为一个link，则可以直接进行解析。
                         String selectResult = null;
@@ -149,100 +150,63 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                                 selectResult = Selector.cssXmlSelector().select(extractInfo.getContent().getBytes(), extractInfo);
                             }
                         }
-                        log.info("extract handler >>> contentType=html ,selectResult={}", selectResult);
-
-
                         Integer resultType = extractInfo.getResultType();
                         if (selectResult == null) {
-                            log.info("extract handler end >>> select result == null");
+                            log.info("extract handler end >>> offset={}, msg = 'select result == null'", value.getOffset());
                         } else if ((resultType == null || resultType == 1) && selectResult != null) {
                             /**
                              * 此分支为 提取element中的text
                              */
-
                             if (StringUtils.isEmpty(extractInfo.getSelectorAttr())) {
                                 Document document = Jsoup.parse(selectResult, "", Parser.xmlParser());
                                 extractInfo.setResult(document.text());
                             } else {
                                 extractInfo.setResult(selectResult);
                             }
-                            log.info("extract handler end >>> push to data result={}", JSON.toJSONString(extractInfo));
                             extractInfo.setContentBytes(null);
-                            StreamData cycleStreamData = new StreamData(
-                                    CReceive.dataHandlerKey,
-                                    JSONObject.toJSONString(extractInfo),
-                                    CReceive.dataHandlerKey
-                            );
-                            outSide(ctx, JSONObject.toJSONString(cycleStreamData));
-
-                            log.info("extract process sideOut >>> tag={},data={}", outputTag, cycleStreamData);
-
+                            log.info("extract handler end >>> offset={} , contentType=html , selectResult={}", value.getOffset(), extractInfo.getResult());
+                            outSide(ctx, CReceive.dataHandlerKey, extractInfo, CReceive.dataHandlerKey, value.getOffset());
                         } else if (resultType == 2) { // 返回的信息是一个数组
                             extractInfo.setResult(selectResult);
-                            handlerHtmlArray(extractInfo, ctx);
+                            log.info("extract handler >>> offset={} , contentType=html , resultType={}", value.getOffset(), "array");
+                            handlerHtmlArray(extractInfo, ctx, value.getOffset());
+                            log.info("extract handler end >>> offset={} , contentType=html , resultType={}", value.getOffset(), "array");
                         } else if (resultType == 3) { // 解析的结果为一个链接
+                            log.info("extract handler >>> offset={} , contentType=html , resultType={}", value.getOffset(), "link");
                             extractInfo.setResult(selectResult);
-                            handlerLink(extractInfo, ctx);
+                            handlerLink(extractInfo, ctx, value.getOffset());
+                            log.info("extract handler end >>> offset={} , contentType=html , resultType={}", value.getOffset(), "link");
                         } else {
                             extractInfo.setResult(selectResult);
-                            log.info("extract handler end >>> push to extract result={}", JSON.toJSONString(extractInfo));
                             extractInfo.setContentBytes(null);
-                            StreamData cycleStreamData = new StreamData(
-                                    CReceive.dataHandlerKey,
-                                    JSONObject.toJSONString(extractInfo),
-                                    CReceive.dataHandlerKey
-                            );
-                            outSide(ctx, JSONObject.toJSONString(cycleStreamData));
-
-                            log.info("extract process sideOut >>> tag={},data={}", outputTag, cycleStreamData);
-
-
+                            outSide(ctx, CReceive.dataHandlerKey, extractInfo, CReceive.dataHandlerKey, value.getOffset());
                         }
 
                     } else if (contentType == 2) {
                     } else if (contentType == 3) {
                         // link 直接生成request进行请求去
                         // TODO url 的校验
+                        log.info("extract handler >>> offset={} , contentType=link", value.getOffset());
                         Request request = Request.create(extractInfo);
                         request.setParentId(String.valueOf(extractInfo.getId()));
-                        log.info("extract handler end >>> contentType=link, request={}", JSON.toJSONString(request));
-                        StreamData cycleStreamData = new StreamData(
-                                CReceive.downloadHandlerKey,
-                                JSONObject.toJSONString(request),
-                                CReceive.downloadHandlerKey
-                        );
+                        log.info("extract handler end >>> offset={} , contentType=link", value.getOffset());
 
-                        outSide(ctx, JSONObject.toJSONString(cycleStreamData));
-
-                        log.info("extract process sideOut >>> tag={},data={}", outputTag, cycleStreamData);
-
-
+                        outSide(ctx, CReceive.downloadHandlerKey, request, CReceive.downloadHandlerKey, value.getOffset());
                     } else if (contentType == 4) {
                         // 静态数据
+                        log.info("extract handler >>> offset={} , contentType=static", value.getOffset());
                         extractInfo.setResult(extractInfo.getContent());
-                        log.info("extract handler end >>> contentType=static, result={}", JSON.toJSONString(extractInfo));
                         extractInfo.setContentBytes(null);
-                        StreamData cycleStreamData = new StreamData(
-                                CReceive.dataHandlerKey,
-                                JSONObject.toJSONString(extractInfo),
-                                CReceive.dataHandlerKey);
-
-                        outSide(ctx, JSONObject.toJSONString(cycleStreamData));
-
-                        log.info("extract process sideOut >>> tag={},data={}", outputTag, cycleStreamData);
-
+                        log.info("extract handler end >>> offset={} , contentType=static", value.getOffset());
+                        outSide(ctx, CReceive.dataHandlerKey, extractInfo, CReceive.dataHandlerKey, value.getOffset());
                     } else if (contentType == 5) {
+                        // base64 信息处理
+                        log.info("extract handler >>> offset={} , contentType=base64", value.getOffset());
                         String base64 = Selector.base64Selector().select(extractInfo.getContentBytes(), extractInfo);
                         extractInfo.setResult(base64);
-                        log.info("extract handler end >>> contentType=base64, result={}", JSON.toJSONString(extractInfo));
                         extractInfo.setContentBytes(null);
-                        StreamData cycleStreamData = new StreamData(
-                                CReceive.dataHandlerKey,
-                                JSONObject.toJSONString(extractInfo),
-                                CReceive.dataHandlerKey);
-
-                        outSide(ctx, JSONObject.toJSONString(cycleStreamData));
-                        log.info("extract process sideOut >>> tag={},data={}", outputTag, cycleStreamData);
+                        log.info("extract handler end >>> offset={} , contentType=base64", value.getOffset());
+                        outSide(ctx, CReceive.dataHandlerKey, extractInfo, CReceive.dataHandlerKey, value.getOffset());
                     }
                 }
 
@@ -252,7 +216,6 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
         } catch (Exception e) {
             // TODO 消息处理异常，设置其为异常状态即可。
         }
-
     }
 
 
@@ -261,7 +224,7 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
      *
      * @param extractInfo
      */
-    private void handlerHtmlArray(ExtractInfo extractInfo, Context ctx) {
+    private void handlerHtmlArray(ExtractInfo extractInfo, Context ctx, long offset) {
         Document doc = Jsoup.parse(extractInfo.getResult(), "", Parser.xmlParser());
         List<Node> nodesTmp = doc.childNodes();
         List<ExtractInfo> childExtract = extractMapper.findByPid(extractInfo.getId());
@@ -296,21 +259,12 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
             // 避免无用数据流转，占用资源
             temp.setContent(null);
             temp.setContentBytes(null);
-
-            StreamData cycleStreamData = new StreamData(
-                    CReceive.extractHandlerKey,
-                    JSONObject.toJSONString(temp),
-                    CReceive.extractHandlerKey);
-
-            outSide(ctx, JSONObject.toJSONString(cycleStreamData));
-            log.info("extract process sideOut >>> tag={},data={}", outputTag, cycleStreamData);
-
-
+            outSide(ctx, CReceive.extractHandlerKey, temp, CReceive.extractHandlerKey, offset);
         }
     }
 
 
-    private void handlerLink(ExtractInfo extractInfo, Context ctx) {
+    private void handlerLink(ExtractInfo extractInfo, Context ctx, long offset) {
         String curUrl = extractInfo.getCurUrl();
         String linkUrl = extractInfo.getResult();
         if (StringUtils.isNotEmpty(linkUrl)) {
@@ -354,20 +308,17 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
 
             }
             if (StringUtils.isNotEmpty(request.getUrl()))
-                outSide(ctx, CReceive.downloadHandlerKey, request, CReceive.downloadHandlerKey);
+                outSide(ctx, CReceive.downloadHandlerKey, request, CReceive.downloadHandlerKey, offset);
         }
     }
 
-    private void outSide(Context ctx, String data) {
-        // TODO 更新消息状态为处理完毕
-        ctx.output(outputTag, data);
-    }
 
-    private void outSide(Context ctx, String receive, Task data, String dataType) {
+    private void outSide(Context ctx, String receive, Task data, String dataType, long offset) {
         StreamData cycleStreamData = new StreamData(
                 receive,
                 JSONObject.toJSONString(data),
                 dataType);
+        log.info("extract handler end >>> offset={}, result={}", offset, cycleStreamData);
         ctx.output(outputTag, JSONObject.toJSONString(cycleStreamData));
     }
 }

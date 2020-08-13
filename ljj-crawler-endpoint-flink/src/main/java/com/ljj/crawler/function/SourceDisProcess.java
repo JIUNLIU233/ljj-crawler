@@ -33,11 +33,12 @@ public class SourceDisProcess extends ProcessFunction<StreamData, StreamData> {
 
     @Override
     public void processElement(StreamData value, Context ctx, Collector<StreamData> out) throws Exception {
-        log.info("source process start >>> data={}", value);
+        log.info("source process start >>> offset={} , data={}", value.getOffset(), value);
         if (value != null) { // 将不同的数据发送到不同的支流中，然后处理 分别是 task download extract data
             String receive = value.getReceive();
             ctx.output(srt.get(receive), value);
         }
+        log.info("source process end >>> offset={}", value.getOffset());
         out.collect(value);
     }
 }

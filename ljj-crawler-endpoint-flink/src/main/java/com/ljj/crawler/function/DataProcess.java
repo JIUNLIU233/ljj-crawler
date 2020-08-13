@@ -57,7 +57,7 @@ public class DataProcess extends ProcessFunction<StreamData, StreamData> {
     public void processElement(StreamData streamData, Context context, Collector<StreamData> collector) throws Exception {
         String data = streamData.getData();
         String dataType = streamData.getDataType();
-        log.info("data process start >>> data={}", data);
+        log.info("data process start >>> offset={} ", streamData.getOffset());
 
         //TODO 设置消息状态为正在处理
         if (CReceive.dataHandlerKey.equalsIgnoreCase(dataType)) {
@@ -87,6 +87,7 @@ public class DataProcess extends ProcessFunction<StreamData, StreamData> {
                         collectionName);
             }
 
+            log.info("data process end >>> offset={} , collection={} , traceId={}", streamData.getOffset(), collectionName, traceId);
         }
 
         // TODO 设置消息为处理完成

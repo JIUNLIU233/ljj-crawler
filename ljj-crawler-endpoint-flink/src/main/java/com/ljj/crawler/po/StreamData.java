@@ -14,7 +14,15 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StreamData implements Serializable {
+    private long offset;
     private String receive;     // 定义哪个模块处理
     private String data;        // 实际的数据信息
     private String dataType;    // 数据的类型
+
+
+    public StreamData(String receive, String data, String dataType) {
+        this.receive = receive;
+        this.data = data;
+        this.dataType = dataType;
+    }
 }

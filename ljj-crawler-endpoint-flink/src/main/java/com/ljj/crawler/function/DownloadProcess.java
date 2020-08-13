@@ -41,8 +41,7 @@ public class DownloadProcess extends ProcessFunction<StreamData, StreamData> {
 
     @Override
     public void processElement(StreamData streamData, Context context, Collector<StreamData> collector) throws Exception {
-        String data = streamData.getData();
-        log.info("download process start >>> data={}", data);
+        log.info("download process start >>> offset={}", streamData.getOffset());
         // TODO 接收到消息，设置消息状态为正在处理
         Request request = JSONObject.parseObject(streamData.getData(), Request.class);
         Response execute = WRequest.create(request).execute();
@@ -73,7 +72,7 @@ public class DownloadProcess extends ProcessFunction<StreamData, StreamData> {
         cycleStreamData.setDataType(CReceive.extractHandlerKey);
 
         context.output(outputTag, JSONObject.toJSONString(cycleStreamData));
-        log.info("download process sideOut >>> tag={},data={}", outputTag, cycleStreamData);
+        log.info("download process sideOut >>> offset={} , tag={},data={}", streamData.getOffset(), outputTag, cycleStreamData);
 
         collector.collect(streamData);
     }

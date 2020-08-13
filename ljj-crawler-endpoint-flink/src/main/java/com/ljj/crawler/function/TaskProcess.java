@@ -60,8 +60,7 @@ public class TaskProcess extends ProcessFunction<StreamData, StreamData> {
     @Override
     public void processElement(StreamData value, Context ctx, Collector<StreamData> out) throws Exception {
         String data = value.getData();
-        log.info("task process start >>> data={}", data);
-
+        log.info("task process start >>> offset={}", value.getOffset());
 
         // TODO 更行任务状态为 执行ing状态。
 
@@ -72,11 +71,10 @@ public class TaskProcess extends ProcessFunction<StreamData, StreamData> {
         List<TaskRule> rules = ruleMapper.findByTid(Integer.valueOf(taskInfo.getTid()));
         String startUrl1 = taskInfo.getStartUrl();
         if (rules == null || rules.size() < 1) { // 链接没有规则信息
-            log.info("task process don`t have rule >>>");
+            log.info("task process don`t have rule >>> offset={}", value.getOffset());
             taskInfo.setTraceId(TraceUtil.traceId()); // 生成一个traceId。
             if (startUrl1 == null || "".equalsIgnoreCase(startUrl1)) {
                 // 为空的时候，证明不需要进行对应的request生成，只需要进行下一步即可。
-                log.info("task process pushExtract >>> extract={}", JSON.toJSONString(taskInfo));
 
                 StreamData cycleStreamData = new StreamData() {{
                     setReceive(CReceive.extractHandlerKey);
@@ -84,12 +82,11 @@ public class TaskProcess extends ProcessFunction<StreamData, StreamData> {
                     setDataType(CReceive.taskHandlerKey);
                 }};
                 ctx.output(outputTag, JSONObject.toJSONString(cycleStreamData));
-                log.info("task process sideOut >>> tag={},data={}", outputTag, cycleStreamData);
+                log.info("task process sideOut >>> offset={} , tag={} , data={}", value.getOffset(), outputTag, cycleStreamData);
 
             } else {
                 Request request = Request.create(taskInfo);
-                log.info("task process pushRequest >>> request={}", JSON.toJSONString(request));
-                outDownLoad(ctx, request);
+                outDownLoad(ctx, request, value.getOffset());
             }
         } else { // 链接有规则信息，有规则信息，则必然存在startUrl。要不然规则无处安放。
             for (TaskRule rule : rules) {
@@ -106,15 +103,13 @@ public class TaskProcess extends ProcessFunction<StreamData, StreamData> {
                         taskInfos.forEach(t -> {
                             t.setTraceId(TraceUtil.traceId());
                             Request request = Request.create(t);
-                            log.info("task process pushRequest >>> request={}", JSON.toJSONString(request));
-                            outDownLoad(ctx, request);
+                            outDownLoad(ctx, request, value.getOffset());
                         });
                     } else {
                         tmpList.forEach(t -> {
                             t.setTraceId(TraceUtil.traceId());
                             Request request = Request.create(t);
-                            log.info("task process pushRequest >>> request={}", JSON.toJSONString(request));
-                            outDownLoad(ctx, request);
+                            outDownLoad(ctx, request, value.getOffset());
                         });
                     }
                 }
@@ -168,13 +163,13 @@ public class TaskProcess extends ProcessFunction<StreamData, StreamData> {
     }
 
 
-    public void outDownLoad(Context ctx, Request request) {
+    public void outDownLoad(Context ctx, Request request, long offset) {
         StreamData streamData = new StreamData() {{
             setReceive(CReceive.downloadHandlerKey);
             setData(JSONObject.toJSONString(request));
             setDataType(CReceive.downloadHandlerKey);
         }};
         ctx.output(outputTag, JSONObject.toJSONString(streamData));
-        log.info("task process sideOut >>> tag={},data={}", outputTag, streamData);
+        log.info("task process sideOut >>> offset={} , tag={} , data={}", offset, outputTag, streamData);
     }
 }

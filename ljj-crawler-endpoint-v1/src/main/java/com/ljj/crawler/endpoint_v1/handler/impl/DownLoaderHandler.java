@@ -46,8 +46,6 @@ public class DownLoaderHandler implements AbstractHandler {
             log.info("download process cycle >>> offset={},data={}", cycleData.getOffset(), data);
         } catch (Exception e) {
             log.info("download process error >>> offset={},e:", cycleData.getOffset(), e);
-        } finally {
-            semaphore.release();
         }
     }
 }

@@ -1,7 +1,6 @@
 package com.ljj.crawler.webspider.http.downloader;
 
 
-
 import com.ljj.crawler.webspider.http.Method;
 import com.ljj.crawler.webspider.http.Request;
 import com.ljj.crawler.webspider.http.Response;
@@ -80,21 +79,32 @@ public class HttpClientDownloader implements Downloader {
         HttpClientBuilder builder = HttpClientBuilder.create();
         if (request.getCookieStore() != null) builder.setDefaultCookieStore(request.getCookieStore()); // cookie 的设置
         builder.setDefaultRequestConfig(config);
+
         CloseableHttpClient client = builder.build();
 
 
         // 5
         CloseableHttpResponse execute = null;
-        Integer retryTime = request.getRetryTime();
+        int retryTime = request.getRetryTime();
         while (retryTime > 0) {
+
             try {
+                logger.debug("task_id={} , 第 {} 次请求发起", request.getTaskId(), request.getRetryTime() - retryTime + 1);
+
+                // TODO 这里有一个问题，请求会被阻塞，导致无法进行下一步处理，系统卡死
                 execute = execute(client, clientRequest);
-                //TODO 相关字符集的设置
+
+                if (execute.getStatusLine().getStatusCode() > 499) throw new Exception("返回状态码异常");
                 logger.debug("task_id={} , 第 {} 次请求 , msg={}", request.getTaskId(), request.getRetryTime() - retryTime + 1, "httpclient 请求成功");
                 break;
             } catch (Exception e) {
-                e.printStackTrace();
-                logger.info("task_id={} , msg={}", request.getTaskId(), "httpclient 请求异常，重试···");
+                logger.info("task_id={} , 第 {} 次请求 , msg={} , e:", request.getTaskId(), request.getRetryTime() - retryTime + 1, "httpclient 请求异常，重试···", e);
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                }
+            } finally {
                 retryTime--;
             }
         }
@@ -108,6 +118,7 @@ public class HttpClientDownloader implements Downloader {
 
 
     private Response parse(Request request, CloseableHttpResponse response) {
+        if (response == null) return null;
         // TODO httpclient 的请求结果转换为自定义
         HttpEntity entity = response.getEntity();
         Response result = new Response(request);

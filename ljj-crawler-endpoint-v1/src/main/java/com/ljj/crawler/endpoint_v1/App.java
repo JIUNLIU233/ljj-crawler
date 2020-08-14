@@ -76,7 +76,7 @@ public class App implements CommandLineRunner {
         } else if (CReceive.dataHandlerKey.equalsIgnoreCase(type)) { // 数据存储的处理
             dataMongoHandler.handler(cycleData, cycleUtils, concurrentSemaphore);
         }
-        log.info("endpoint listener end >>> offset={} , data={}", offset);
+        log.info("endpoint listener end >>> offset={} ", offset);
     }
 
     @KafkaListener(groupId = "endpoint-downloader", topics = "${crawler.topic}")
@@ -92,10 +92,12 @@ public class App implements CommandLineRunner {
         if (CReceive.downloadHandlerKey.equalsIgnoreCase(type)) {
             try {
                 concurrentSemaphore.acquire();
-                threadPool.execute(() -> downLoaderHandler.handler(cycleData, cycleUtils, concurrentSemaphore));
+                threadPool.execute(() -> {
+                    downLoaderHandler.handler(cycleData, cycleUtils, concurrentSemaphore);
+                    concurrentSemaphore.release();
+                });
             } catch (InterruptedException e) {
                 log.error("downloader listener error , e:", e);
-                concurrentSemaphore.release();
             }
         }
         log.info("endpoint-downloader listener end >>> offset={} , data={}", offset, value);

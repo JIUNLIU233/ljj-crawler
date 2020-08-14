@@ -21,6 +21,11 @@ public class KafkaProducerTest {
     @Test
     public void test() {
         String data = "{\"receive\":\"task\",\"data\":{\"id\":5},\"dataType\":\"task\"}";
-        kafkaTemplate.send("ljj_test", data);
+
+        for (int i = 0; i < 5; i++) {
+
+            kafkaTemplate.send("ljj_test", ">>>>" + i);
+
+        }
     }
 }

@@ -182,8 +182,17 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                             outSide(ctx, CReceive.dataHandlerKey, extractInfo, CReceive.dataHandlerKey, value.getOffset());
                         }
 
-                    } else if (contentType == 2) {
-                    } else if (contentType == 3) {
+                    }
+                    /**
+                     *  这个分支下，处理 json 信息
+                     */
+                    else if (contentType == 2) {
+
+                    }
+                    /**
+                     *  这个分支下 处理 链接信息
+                     */
+                    else if (contentType == 3) {
                         // link 直接生成request进行请求去
                         // TODO url 的校验
                         log.info("extract handler >>> offset={} , contentType=link", value.getOffset());
@@ -192,14 +201,22 @@ public class ExtractProcess extends ProcessFunction<StreamData, StreamData> {
                         log.info("extract handler end >>> offset={} , contentType=link", value.getOffset());
 
                         outSide(ctx, CReceive.downloadHandlerKey, request, CReceive.downloadHandlerKey, value.getOffset());
-                    } else if (contentType == 4) {
+                    }
+                    /**
+                     *  这个分支下处理 从 配置中心配置的静态数据信息
+                     */
+                    else if (contentType == 4) {
                         // 静态数据
                         log.info("extract handler >>> offset={} , contentType=static", value.getOffset());
                         extractInfo.setResult(extractInfo.getContent());
                         extractInfo.setContentBytes(null);
                         log.info("extract handler end >>> offset={} , contentType=static", value.getOffset());
                         outSide(ctx, CReceive.dataHandlerKey, extractInfo, CReceive.dataHandlerKey, value.getOffset());
-                    } else if (contentType == 5) {
+                    }
+                    /**
+                     * 这个分支下处理base64 进行编码原始返回信息
+                     */
+                    else if (contentType == 5) {
                         // base64 信息处理
                         log.info("extract handler >>> offset={} , contentType=base64", value.getOffset());
                         String base64 = Selector.base64Selector().select(extractInfo.getContentBytes(), extractInfo);

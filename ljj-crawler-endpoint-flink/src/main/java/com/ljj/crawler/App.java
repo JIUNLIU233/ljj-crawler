@@ -15,8 +15,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class App implements CommandLineRunner {
 
     private FlinkEndPointApp flinkEndPointApp;
-    @Autowired
-    private FlinkConApp flinkConApp;
+
 
     @Autowired
     public App(FlinkEndPointApp flinkEndPointApp) {
@@ -30,7 +29,6 @@ public class App implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-//        flinkEndPointApp.start();
-        flinkConApp.start();
+        flinkEndPointApp.start();
     }
 }

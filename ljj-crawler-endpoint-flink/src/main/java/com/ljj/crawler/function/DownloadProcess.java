@@ -21,7 +21,6 @@ import java.net.URL;
  * @Author:JIUNLIU
  * @data : 2020/8/7 20:56
  */
-@Component
 @Slf4j
 public class DownloadProcess extends ProcessFunction<StreamData, StreamData> {
 

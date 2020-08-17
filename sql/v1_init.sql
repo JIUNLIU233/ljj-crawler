@@ -11,7 +11,7 @@
  Target Server Version : 80018
  File Encoding         : 65001
 
- Date: 14/08/2020 16:35:42
+ Date: 17/08/2020 21:09:20
 */
 
 SET NAMES utf8mb4;
@@ -33,7 +33,7 @@ CREATE TABLE `extract_info`  (
   `mount` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAULT NULL COMMENT '本次解析结果的数据存储挂载点',
   `arrayRange` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAULT NULL COMMENT '数组的选择范围',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 37 CHARACTER SET = utf8 COLLATE = utf8_bin ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 41 CHARACTER SET = utf8 COLLATE = utf8_bin ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of extract_info
@@ -58,6 +58,9 @@ INSERT INTO `extract_info` VALUES (34, 5, 33, NULL, NULL, 'a', NULL, NULL, 'ljj[
 INSERT INTO `extract_info` VALUES (35, 5, 33, NULL, NULL, 'a', 'href', NULL, 'ljj[new].chapterUrl', NULL);
 INSERT INTO `extract_info` VALUES (36, 5, 33, NULL, NULL, 'a', 'href', 3, NULL, NULL);
 INSERT INTO `extract_info` VALUES (37, 5, 36, NULL, NULL, '#content', NULL, NULL, 'ljj.chapterContent', NULL);
+INSERT INTO `extract_info` VALUES (38, 6, NULL, NULL, NULL, 'div[itemprop=articleBody] a', NULL, 2, NULL, NULL);
+INSERT INTO `extract_info` VALUES (39, 6, 38, NULL, NULL, 'a', 'href', 3, NULL, NULL);
+INSERT INTO `extract_info` VALUES (40, 6, 39, NULL, 5, NULL, NULL, NULL, 'pic.UUID', NULL);
 
 -- ----------------------------
 -- Table structure for extract_result_type
@@ -68,7 +71,7 @@ CREATE TABLE `extract_result_type`  (
   `type` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `comment` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8 COLLATE = utf8_bin ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8 COLLATE = utf8_bin ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of extract_result_type
@@ -88,7 +91,7 @@ CREATE TABLE `extract_type`  (
   `comment` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAULT NULL COMMENT '关于数据的解释',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `extract_type`(`type`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8 COLLATE = utf8_bin ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8 COLLATE = utf8_bin ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of extract_type
@@ -112,7 +115,7 @@ CREATE TABLE `task_info`  (
   `comment` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAULT NULL COMMENT 'comment',
   `state` int(11) NULL DEFAULT NULL COMMENT '状态信息',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8 COLLATE = utf8_bin ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8 COLLATE = utf8_bin ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of task_info
@@ -120,6 +123,7 @@ CREATE TABLE `task_info`  (
 INSERT INTO `task_info` VALUES (1, '新笔趣阁 三寸人间抓取案例', 'http://www.xbiquge.la/10/10489/', '抓取该小说的基本信息', NULL);
 INSERT INTO `task_info` VALUES (4, '单本小说抓取', 'http://www.xbiquge.la/10/10489/', '抓取一本小说说有内容的案例', NULL);
 INSERT INTO `task_info` VALUES (5, 'a', 'http://www.xbiquge.la/0/951/', '2', NULL);
+INSERT INTO `task_info` VALUES (6, '图片抓取案例', 'http://nsfwpicx.com/archives/1904.html', NULL, NULL);
 
 -- ----------------------------
 -- Table structure for task_rule
@@ -132,7 +136,7 @@ CREATE TABLE `task_rule`  (
   `ruleType` int(255) NULL DEFAULT NULL COMMENT '规则类型 1：递增',
   `ruleParam` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NULL DEFAULT NULL COMMENT '用于规则的参数',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_bin ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_bin ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of task_rule

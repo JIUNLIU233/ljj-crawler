@@ -161,10 +161,23 @@ public class ExtractHandler implements AbstractHandler {
 
                     }
                     /**
-                     *  这个分支下，处理 json 信息
+                     *  这个分支下，处理 json 信息 或 正则数据
                      */
-                    else if (contentType == 2) {
+                    else if (contentType == 2 || contentType == 6) {
+                        String select = null;
 
+                        if (contentType == 2)
+                            select = Selector.jsonSelector().select(extractInfo.getContentBytes(), extractInfo);
+                        else if (contentType == 6)
+                            select = Selector.regexSelector().select(extractInfo.getContentBytes(), extractInfo);
+
+                        extractInfo.setResult(select);
+                        extractInfo.setResultBytes(select.getBytes());
+                        if (mount == null) {// 不挂载，还得继续处理。
+                            outSide(cycleUtils, CReceive.extractHandlerKey, extractInfo, CReceive.extractHandlerKey, value.getOffset());
+                        } else {
+                            outSide(cycleUtils, CReceive.dataHandlerKey, extractInfo, CReceive.dataHandlerKey, value.getOffset());
+                        }
                     }
                     /**
                      *  这个分支下 处理 链接信息

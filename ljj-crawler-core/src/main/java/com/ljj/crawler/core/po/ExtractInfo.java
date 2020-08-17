@@ -65,12 +65,12 @@ public class ExtractInfo implements Task, Cloneable {
 
     @Override
     public String getTid() {
-        return String.valueOf(tid);
+        return tid == null ? null : String.valueOf(tid);
     }
 
     @Override
     public String getPId() {
-        return String.valueOf(pid);
+        return pid == null ? null : String.valueOf(pid);
     }
 
     @Override

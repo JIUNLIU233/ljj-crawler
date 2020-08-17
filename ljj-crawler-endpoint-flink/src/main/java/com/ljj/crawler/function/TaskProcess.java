@@ -129,21 +129,22 @@ public class TaskProcess extends ProcessFunction<StreamData, StreamData> {
         int start = Integer.valueOf(split[0]);
         int max = Integer.valueOf(split[1]);
         for (; start <= max; start++) {
+            String replacement = String.valueOf(start);
             if (flagTmp.get("firstFlag")) {
                 TaskInfo tmp = new TaskInfo(taskInfo);
-                tmp.setStartUrl(tmp.getStartUrl().replace("{" + taskRule.getField() + "}", String.valueOf(start)));
+                tmp.setStartUrl(tmp.getStartUrl().replace("{" + taskRule.getField() + "}", replacement));
                 taskInfos.add(tmp);
             } else {
                 if (flagTmp.get("orderFlag")) {
                     for (TaskInfo info : taskInfos) {
                         TaskInfo tmp = new TaskInfo(info);
-                        tmp.setStartUrl(tmp.getStartUrl().replace("{" + taskRule.getField() + "}", String.valueOf(start)));
+                        tmp.setStartUrl(tmp.getStartUrl().replace("{" + taskRule.getField() + "}", replacement));
                         tmpList.add(tmp);
                     }
                 } else {
                     for (TaskInfo info : tmpList) {
                         TaskInfo tmp = new TaskInfo(info);
-                        tmp.setStartUrl(tmp.getStartUrl().replace("{" + taskRule.getField() + "}", String.valueOf(start)));
+                        tmp.setStartUrl(tmp.getStartUrl().replace("{" + taskRule.getField() + "}", replacement));
                         taskInfos.add(tmp);
                     }
                 }

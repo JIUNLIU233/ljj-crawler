@@ -11,6 +11,7 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.EntityBuilder;
 import org.apache.http.client.methods.*;
+import org.apache.http.config.SocketConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicHeader;
@@ -70,8 +71,14 @@ public class HttpClientDownloader implements Downloader {
 
         //7
         RequestConfig.Builder custom = RequestConfig.custom();
+        SocketConfig.Builder socketCustom = SocketConfig.custom();
+        socketCustom.setSoKeepAlive(false);
+        socketCustom.setSoTimeout(request.getTimeOut());
         //7.1
         custom = custom.setRedirectsEnabled(false);
+        custom = custom.setConnectTimeout(request.getTimeOut());
+        custom = custom.setConnectionRequestTimeout(request.getTimeOut());
+
 
         RequestConfig config = custom.build();
 
@@ -79,6 +86,7 @@ public class HttpClientDownloader implements Downloader {
         HttpClientBuilder builder = HttpClientBuilder.create();
         if (request.getCookieStore() != null) builder.setDefaultCookieStore(request.getCookieStore()); // cookie 的设置
         builder.setDefaultRequestConfig(config);
+        builder.setDefaultSocketConfig(socketCustom.build());
 
         CloseableHttpClient client = builder.build();
 

@@ -29,20 +29,27 @@ public class App implements CommandLineRunner {
 
     @Value("${crawler.concurrent}")
     private int concurrent;
+    @Value("${crawler.update.latest.flag}")
+    private boolean updateOffsetToLatest;
 
-    @Autowired
-    private TaskHandler taskHandler;
-    @Autowired
-    private DownLoaderHandler downLoaderHandler;
-    @Autowired
-    private ExtractHandler extractHandler;
-    @Autowired
-    private DataMongoHandler dataMongoHandler;
-    @Autowired
-    private CycleUtils cycleUtils;
+    private final TaskHandler taskHandler;
+    private final DownLoaderHandler downLoaderHandler;
+    private final ExtractHandler extractHandler;
+    private final DataMongoHandler dataMongoHandler;
+    private final CycleUtils cycleUtils;
 
     private Semaphore concurrentSemaphore;
     ExecutorService threadPool;
+
+    @Autowired
+    public App(TaskHandler taskHandler, DownLoaderHandler downLoaderHandler, ExtractHandler extractHandler, DataMongoHandler dataMongoHandler, CycleUtils cycleUtils) {
+        this.taskHandler = taskHandler;
+        this.downLoaderHandler = downLoaderHandler;
+        this.extractHandler = extractHandler;
+        this.dataMongoHandler = dataMongoHandler;
+        this.cycleUtils = cycleUtils;
+    }
+
 
     public static void main(String[] args) {
         SpringApplication.run(App.class, args);
@@ -65,16 +72,18 @@ public class App implements CommandLineRunner {
         long offset = record.offset();
         String value = record.value();
         log.info("endpoint listener start >>> offset={} , data={}", offset, value);
-        CycleData cycleData = JSONObject.parseObject(value, CycleData.class);
-        cycleData.setOffset(offset);
-        cycleData.setPartition(partition);
-        String type = cycleData.getType();
-        if (CReceive.taskHandlerKey.equalsIgnoreCase(type)) { //  task的处理
-            taskHandler.handler(cycleData, cycleUtils, concurrentSemaphore);
-        } else if (CReceive.extractHandlerKey.equalsIgnoreCase(type)) { // 解析的处理
-            extractHandler.handler(cycleData, cycleUtils, concurrentSemaphore);
-        } else if (CReceive.dataHandlerKey.equalsIgnoreCase(type)) { // 数据存储的处理
-            dataMongoHandler.handler(cycleData, cycleUtils, concurrentSemaphore);
+        if (!updateOffsetToLatest) {
+            CycleData cycleData = JSONObject.parseObject(value, CycleData.class);
+            cycleData.setOffset(offset);
+            cycleData.setPartition(partition);
+            String type = cycleData.getType();
+            if (CReceive.taskHandlerKey.equalsIgnoreCase(type)) { //  task的处理
+                taskHandler.handler(cycleData, cycleUtils, concurrentSemaphore);
+            } else if (CReceive.extractHandlerKey.equalsIgnoreCase(type)) { // 解析的处理
+                extractHandler.handler(cycleData, cycleUtils, concurrentSemaphore);
+            } else if (CReceive.dataHandlerKey.equalsIgnoreCase(type)) { // 数据存储的处理
+                dataMongoHandler.handler(cycleData, cycleUtils, concurrentSemaphore);
+            }
         }
         log.info("endpoint listener end >>> offset={} ", offset);
     }
@@ -85,19 +94,21 @@ public class App implements CommandLineRunner {
         long offset = record.offset();
         String value = record.value();
         log.info("endpoint-downloader listener start >>> offset={} , data={}", offset, value);
-        CycleData cycleData = JSONObject.parseObject(value, CycleData.class);
-        cycleData.setOffset(offset);
-        cycleData.setPartition(partition);
-        String type = cycleData.getType();
-        if (CReceive.downloadHandlerKey.equalsIgnoreCase(type)) {
-            try {
-                concurrentSemaphore.acquire();
-                threadPool.execute(() -> {
-                    downLoaderHandler.handler(cycleData, cycleUtils, concurrentSemaphore);
-                    concurrentSemaphore.release();
-                });
-            } catch (InterruptedException e) {
-                log.error("downloader listener error , e:", e);
+        if (!updateOffsetToLatest) {
+            CycleData cycleData = JSONObject.parseObject(value, CycleData.class);
+            cycleData.setOffset(offset);
+            cycleData.setPartition(partition);
+            String type = cycleData.getType();
+            if (CReceive.downloadHandlerKey.equalsIgnoreCase(type)) {
+                try {
+                    concurrentSemaphore.acquire();
+                    threadPool.execute(() -> {
+                        downLoaderHandler.handler(cycleData, cycleUtils, concurrentSemaphore);
+                        concurrentSemaphore.release();
+                    });
+                } catch (InterruptedException e) {
+                    log.error("downloader listener error , e:", e);
+                }
             }
         }
         log.info("endpoint-downloader listener end >>> offset={} , data={}", offset, value);

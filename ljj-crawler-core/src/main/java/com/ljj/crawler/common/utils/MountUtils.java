@@ -2,6 +2,8 @@ package com.ljj.crawler.common.utils;
 
 import com.ljj.crawler.core.po.ExtractInfo;
 
+import java.util.UUID;
+
 /**
  * 数据挂载的工具类
  * Create by JIUN·LIU
@@ -52,7 +54,10 @@ public class MountUtils {
         if (mount != null) {
             String[] split = mount.split("\\.");
             if (split.length == 2) { // 直接挂载节点。
-                return split[1];
+                String s = split[1];
+                if (s == null || s.equalsIgnoreCase("uuid"))
+                    return UUID.randomUUID().toString();
+                return s;
             } else if (split.length == 3) {
                 int i = split[1].indexOf("[");
                 String substring = split[1].substring(0, i);

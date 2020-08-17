@@ -70,6 +70,10 @@ public class ExtractHandler implements AbstractHandler {
                 String traceIdTemp = TraceUtil.traceId();
                 boolean newTraceFlag = false;
                 for (ExtractInfo extractInfo : extractInfos) {
+
+                    if (extractInfo.getId() == 40){
+                        System.out.println("");
+                    }
                     // 上个节点的result是当前节点的content
                     if (CReceive.extractHandlerKey.equalsIgnoreCase(dataType)) {
                         ExtractInfo sourceExtract = JSONObject.parseObject(data, ExtractInfo.class);

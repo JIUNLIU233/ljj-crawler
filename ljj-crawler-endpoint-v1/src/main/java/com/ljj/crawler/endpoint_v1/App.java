@@ -27,7 +27,7 @@ import java.util.concurrent.Semaphore;
 @MapperScan("com.ljj.crawler.mapper")
 public class App implements CommandLineRunner {
 
-    @Value("${crawler.concurrent}")
+    @Value("${crawler.download.concurrent}")
     private int concurrent;
     @Value("${crawler.update.latest.flag}")
     private boolean updateOffsetToLatest;

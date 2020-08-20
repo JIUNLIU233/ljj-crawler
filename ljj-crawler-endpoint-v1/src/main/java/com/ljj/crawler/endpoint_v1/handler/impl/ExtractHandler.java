@@ -9,7 +9,7 @@ import com.ljj.crawler.endpoint_v1.handler.AbstractHandler;
 import com.ljj.crawler.endpoint_v1.po.CReceive;
 import com.ljj.crawler.endpoint_v1.po.CycleData;
 import com.ljj.crawler.endpoint_v1.utils.CycleUtils;
-import com.ljj.crawler.mapper.ExtractMapper;
+import com.ljj.crawler.service.ExtractService;
 import com.ljj.crawler.webspider.http.Request;
 import com.ljj.crawler.webspider.selector.Selector;
 import lombok.extern.slf4j.Slf4j;
@@ -18,9 +18,9 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Node;
 import org.jsoup.parser.Parser;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
@@ -35,8 +35,8 @@ import java.util.concurrent.Semaphore;
 @Slf4j
 public class ExtractHandler implements AbstractHandler {
 
-    @Resource
-    private ExtractMapper extractMapper;
+    @Autowired
+    private ExtractService extractService;
 
     @Override
     public void handler(CycleData value, CycleUtils cycleUtils, Semaphore semaphore) {
@@ -51,15 +51,15 @@ public class ExtractHandler implements AbstractHandler {
             String pid;
             if (CReceive.taskHandlerKey.equalsIgnoreCase(dataType)) {
                 TaskInfo taskInfo = JSONObject.parseObject(data, TaskInfo.class);
-                extractInfos = extractMapper.findByTid(taskInfo.getId());
+                extractInfos = extractService.findExtractByTid(taskInfo.getId());
             } else if (CReceive.extractHandlerKey.equalsIgnoreCase(dataType)) {
                 ExtractInfo extractInfo = JSONObject.parseObject(data, ExtractInfo.class);
                 sourcePTraceId = extractInfo.getPTraceId();
                 pid = extractInfo.getPId();
                 if (pid == null || "null".equalsIgnoreCase(pid)) {
-                    extractInfos = extractMapper.findByTid(Integer.valueOf(extractInfo.getTid()));
+                    extractInfos = extractService.findExtractByTid(Integer.valueOf(extractInfo.getTid()));
                 } else {
-                    extractInfos = extractMapper.findByPid(Integer.valueOf(pid));
+                    extractInfos = extractService.findExtractByPid(Integer.valueOf(pid));
                 }
             }
 
@@ -238,7 +238,7 @@ public class ExtractHandler implements AbstractHandler {
     private void handlerHtmlArray(ExtractInfo extractInfo, CycleUtils cycleUtils, long offset) {
         Document doc = Jsoup.parse(extractInfo.getResult(), "", Parser.xmlParser());
         List<Node> nodesTmp = doc.childNodes();
-        List<ExtractInfo> childExtract = extractMapper.findByPid(extractInfo.getId());
+        List<ExtractInfo> childExtract = extractService.findExtractByPid(extractInfo.getId());
         if (childExtract == null || childExtract.size() < 1) return;
         CopyOnWriteArrayList<Node> nodes = new CopyOnWriteArrayList<>();
         nodes.addAll(nodesTmp);

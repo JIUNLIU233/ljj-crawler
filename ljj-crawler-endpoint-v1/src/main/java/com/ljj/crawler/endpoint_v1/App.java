@@ -10,12 +10,12 @@ import com.ljj.crawler.endpoint_v1.po.CycleData;
 import com.ljj.crawler.endpoint_v1.utils.CycleUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.kafka.annotation.KafkaListener;
 
 import java.util.concurrent.ExecutorService;
@@ -24,7 +24,7 @@ import java.util.concurrent.Semaphore;
 
 @Slf4j
 @SpringBootApplication
-@MapperScan("com.ljj.crawler.mapper")
+@ComponentScan("com.ljj")
 public class App implements CommandLineRunner {
 
     @Value("${crawler.download.concurrent}")

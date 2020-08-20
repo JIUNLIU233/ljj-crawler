@@ -26,4 +26,8 @@ public class TaskService {
         taskMapper.insertOne(taskInfo);
         return taskInfo;
     }
+
+    public TaskInfo findById(int tid) {
+        return taskMapper.findById(tid);
+    }
 }

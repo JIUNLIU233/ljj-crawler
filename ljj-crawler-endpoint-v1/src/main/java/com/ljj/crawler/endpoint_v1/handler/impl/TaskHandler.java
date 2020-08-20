@@ -8,13 +8,13 @@ import com.ljj.crawler.endpoint_v1.handler.AbstractHandler;
 import com.ljj.crawler.endpoint_v1.po.CReceive;
 import com.ljj.crawler.endpoint_v1.po.CycleData;
 import com.ljj.crawler.endpoint_v1.utils.CycleUtils;
-import com.ljj.crawler.mapper.RuleMapper;
-import com.ljj.crawler.mapper.TaskMapper;
+import com.ljj.crawler.service.TaskRuleService;
+import com.ljj.crawler.service.TaskService;
 import com.ljj.crawler.webspider.http.Request;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,10 +28,10 @@ import java.util.concurrent.Semaphore;
 @Slf4j
 public class TaskHandler implements AbstractHandler {
 
-    @Resource
-    private TaskMapper taskMapper;
-    @Resource
-    private RuleMapper ruleMapper;
+    @Autowired
+    private TaskService taskService;
+    @Autowired
+    private TaskRuleService taskRuleService;
 
     @Override
     public void handler(CycleData value, CycleUtils cycleUtils, Semaphore semaphore) {
@@ -42,9 +42,9 @@ public class TaskHandler implements AbstractHandler {
 
         TaskInfo task = JSONObject.toJavaObject(JSONObject.parseObject(data), TaskInfo.class);
 
-        TaskInfo taskInfo = taskMapper.findById(Integer.valueOf(task.getTid()));
+        TaskInfo taskInfo = taskService.findById(Integer.valueOf(task.getTid()));
         //2、对task Info做出相对必要的校验信息
-        List<TaskRule> rules = ruleMapper.findByTid(Integer.valueOf(taskInfo.getTid()));
+        List<TaskRule> rules = taskRuleService.findByTid(Integer.valueOf(taskInfo.getTid()));
         String startUrl1 = taskInfo.getStartUrl();
         if (rules == null || rules.size() < 1) { // 链接没有规则信息
             log.info("task process don`t have rule >>> offset={}", value.getOffset());

@@ -109,4 +109,13 @@ public class ExtractService {
         }
 
     }
+
+
+    public List<ExtractInfo> findExtractByTid(Integer tid) {
+        return extractMapper.findByTid(tid);
+    }
+
+    public List<ExtractInfo> findExtractByPid(Integer pid){
+        return extractMapper.findByPid(pid);
+    }
 }

@@ -7,6 +7,7 @@ import com.ljj.crawler.mapper.RuleMapper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * 功能：
@@ -29,5 +30,9 @@ public class TaskRuleService {
                 taskRule.setTid(tid);
                 ruleMapper.insertOne(taskRule);
             }
+    }
+
+    public List<TaskRule> findByTid(int tid){
+        return ruleMapper.findByTid(tid);
     }
 }

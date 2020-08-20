@@ -1,11 +1,12 @@
 package com.ljj.crawler.mapper;
 
-import com.ljj.crawler.common.constant.TableKey;
 import com.ljj.crawler.core.po.TaskInfo;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Select;
+
+import static com.ljj.crawler.common.constant.TableKey.taskTable;
 
 /**
  * Create by JIUN·LIU
@@ -14,11 +15,11 @@ import org.apache.ibatis.annotations.Select;
 @Mapper
 public interface TaskMapper {
 
-    @Select("select * from " + TableKey.taskTable + " where id=#{id}")
+    @Select("select * from " + taskTable + " where id=#{id}")
     TaskInfo findById(Integer id);
 
 
-    @Insert("insert into " + TableKey.taskTable +
+    @Insert("insert into " + taskTable +
             " (name,startUrl,comment) " +
             "values" +
             " (#{name},#{startUrl},#{comment})")

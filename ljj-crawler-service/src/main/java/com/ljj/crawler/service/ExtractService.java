@@ -2,13 +2,14 @@ package com.ljj.crawler.service;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.ljj.crawler.common.constant.ConfigConstant;
 import com.ljj.crawler.core.po.ExtractInfo;
 import com.ljj.crawler.mapper.ExtractMapper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
+
+import static com.ljj.crawler.common.constant.ConfigConstant.extractChildKey;
 
 /**
  * Create by JIUN·LIU
@@ -43,7 +44,7 @@ public class ExtractService {
         if (extracts == null) return;
         for (int i = 0; i < extracts.size(); i++) {
             JSONObject extractJSON = extracts.getJSONObject(i);
-            JSONArray child = extractJSON.getJSONArray(ConfigConstant.extractChildKey);
+            JSONArray child = extractJSON.getJSONArray(extractChildKey);
             ExtractInfo extractInfo = extractJSON.toJavaObject(ExtractInfo.class);
             extractInfo.setTid(tid);
             // 判断是否含有子解析
@@ -64,7 +65,7 @@ public class ExtractService {
         List<ExtractInfo> sons = extractMapper.findByPid(parentExtract.getInteger("id"));
         if (sons == null || sons.size() < 1) return;
         JSONArray child = export(sons);
-        parentExtract.put(ConfigConstant.extractChildKey, child);
+        parentExtract.put(extractChildKey, child);
     }
 
     /**
@@ -90,7 +91,7 @@ public class ExtractService {
 
 
     private void importChild(JSONObject extractJSON, Integer tid) { //  到了这里基本上是肯定有子解析的。暂时不做判断
-        JSONArray child = extractJSON.getJSONArray(ConfigConstant.extractChildKey); // 查询子解析
+        JSONArray child = extractJSON.getJSONArray(extractChildKey); // 查询子解析
         ExtractInfo extractInfo = extractJSON.toJavaObject(ExtractInfo.class);
         extractInfo.setTid(tid);
         extractMapper.insert(extractInfo); // 插入自己
@@ -100,7 +101,7 @@ public class ExtractService {
             sonExtract.setTid(tid);
             sonExtract.setPid(extractInfo.getId());
 
-            JSONArray sonChild = son.getJSONArray(ConfigConstant.extractChildKey);
+            JSONArray sonChild = son.getJSONArray(extractChildKey);
             if (sonChild != null && sonChild.size() > 0) { // 判断子解析是否依然包含子解析
                 importChild(son, tid);
             } else {
@@ -115,7 +116,7 @@ public class ExtractService {
         return extractMapper.findByTid(tid);
     }
 
-    public List<ExtractInfo> findExtractByPid(Integer pid){
+    public List<ExtractInfo> findExtractByPid(Integer pid) {
         return extractMapper.findByPid(pid);
     }
 }

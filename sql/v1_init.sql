@@ -58,9 +58,6 @@ INSERT INTO `extract_info` VALUES (34, 5, 33, NULL, NULL, 'a', NULL, NULL, 'ljj[
 INSERT INTO `extract_info` VALUES (35, 5, 33, NULL, NULL, 'a', 'href', NULL, 'ljj[new].chapterUrl', NULL);
 INSERT INTO `extract_info` VALUES (36, 5, 33, NULL, NULL, 'a', 'href', 3, NULL, NULL);
 INSERT INTO `extract_info` VALUES (37, 5, 36, NULL, NULL, '#content', NULL, NULL, 'ljj.chapterContent', NULL);
-INSERT INTO `extract_info` VALUES (38, 6, NULL, NULL, NULL, 'div[itemprop=articleBody] a', NULL, 2, NULL, NULL);
-INSERT INTO `extract_info` VALUES (39, 6, 38, NULL, NULL, 'a', 'href', 3, NULL, NULL);
-INSERT INTO `extract_info` VALUES (40, 6, 39, NULL, 5, NULL, NULL, NULL, 'pic.UUID', NULL);
 
 -- ----------------------------
 -- Table structure for extract_result_type
@@ -123,7 +120,6 @@ CREATE TABLE `task_info`  (
 INSERT INTO `task_info` VALUES (1, '新笔趣阁 三寸人间抓取案例', 'http://www.xbiquge.la/10/10489/', '抓取该小说的基本信息', NULL);
 INSERT INTO `task_info` VALUES (4, '单本小说抓取', 'http://www.xbiquge.la/10/10489/', '抓取一本小说说有内容的案例', NULL);
 INSERT INTO `task_info` VALUES (5, 'a', 'http://www.xbiquge.la/0/951/', '2', NULL);
-INSERT INTO `task_info` VALUES (6, '图片抓取案例', 'http://nsfwpicx.com/archives/1904.html', NULL, NULL);
 
 -- ----------------------------
 -- Table structure for task_rule
